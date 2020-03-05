@@ -1,0 +1,22 @@
+{
+  "name": "reliable-queue-redis",
+  "version": "0.0.1",
+  "description": "Redis' reliable queue pattern implementation",
+  "main": "index.js",
+  "dependencies": {
+    "ioredis": "4.16.0"
+  },
+  "devDependencies": {
+    "@types/ioredis": "4.14.8",
+    "typescript": "3.8.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "reliable",
+    "queue"
+  ],
+  "author": "Arkadiy Shuvaev",
+  "license": "ISC"
+}
