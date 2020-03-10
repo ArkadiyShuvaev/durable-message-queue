@@ -1,6 +1,8 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
 import ActionResult from "./actionResult";
+import { QueueData } from "./types";
+import { nameof } from "./utils";
 
 
 export default class Producer extends BaseService {
@@ -19,10 +21,15 @@ export default class Producer extends BaseService {
                 const jobId = await this._redis.incr(this._keyQueue);
                 const dataKey = this.getDataKeyByJobId(jobId.toString());
 
+                const queueData: QueueData = {
+                    createdDt: new Date().getTime(),
+                    payload: data
+                };
+
                 await this._redis
                     .multi()
-                    .hset(dataKey, this._createdDtFieldName, new Date().getTime())
-                    .hset(dataKey, this._payloadFieldName, data)
+                    .hset(dataKey, nameof<QueueData>("createdDt"), queueData.createdDt)
+                    .hset(dataKey, nameof<QueueData>("payload"), queueData.payload)
                     .rpush(this._publishedQueue, jobId)
                     .exec();
 
