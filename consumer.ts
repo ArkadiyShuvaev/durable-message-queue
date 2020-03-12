@@ -25,7 +25,7 @@ export default class Consumer extends BaseService {
      */
     async subscribe(callback: fArgVoid) {        
         try {
-            await this.redisInSubscribedState.subscribe(this._notificationQueue);
+            await this.redisInSubscribedState.subscribe(this.notificationQueue);
             this.redisInSubscribedState.on("message", this.handler(callback));    
         } catch (error) {
             console.log(error);
@@ -36,16 +36,16 @@ export default class Consumer extends BaseService {
     private handler(callback: fArgVoid): (...args: any[]) => void {
         return async () => {
 
-            const processedJobId = await this._redis.rpoplpush(this._publishedQueue, this._processingQueue);
+            const processedJobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
             const dataKey = this.getDataKeyByJobId(processedJobId);
-            const obj = <QueueData><unknown>(await this._redis.hgetall(dataKey));
+            const obj = <QueueData><unknown>(await this.redis.hgetall(dataKey));
 
             callback(obj.payload);
 
-            await this._redis
+            await this.redis
                     .multi()
                     .hdel(dataKey, nameof<QueueData>("createdDt"), nameof<QueueData>("payload"))
-                    .lrem(this._processingQueue, 0, processedJobId)                    
+                    .lrem(this.processingQueue, 0, processedJobId)                    
                     .exec();
         };
     }

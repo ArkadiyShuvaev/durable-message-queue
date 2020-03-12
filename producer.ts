@@ -18,7 +18,7 @@ export default class Producer extends BaseService {
 
         return new Promise<ActionResult>(async (res, rej) => {
             try {
-                const jobId = await this._redis.incr(this._keyQueue);
+                const jobId = await this.redis.incr(this.keyQueue);
                 const dataKey = this.getDataKeyByJobId(jobId.toString());
 
                 const queueData: QueueData = {
@@ -26,14 +26,14 @@ export default class Producer extends BaseService {
                     payload: data
                 };
 
-                await this._redis
+                await this.redis
                     .multi()
                     .hset(dataKey, nameof<QueueData>("createdDt"), queueData.createdDt)
                     .hset(dataKey, nameof<QueueData>("payload"), queueData.payload)
-                    .rpush(this._publishedQueue, jobId)
+                    .rpush(this.publishedQueue, jobId)
                     .exec();
 
-                await this._redis.publish(this._notificationQueue, jobId.toString());
+                await this.redis.publish(this.notificationQueue, jobId.toString());
 
                 res({
                     isSuccess: true,

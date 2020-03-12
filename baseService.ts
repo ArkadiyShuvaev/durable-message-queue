@@ -2,27 +2,27 @@ import { Redis } from "ioredis";
 
 export default class BaseService {
     
-    protected _redis: Redis;
-    protected _keyQueue: string;
-    protected _dataQueue: string;
-    protected _publishedQueue: string;
-    protected _processingQueue: string;
-    protected _notificationQueue: string;
+    protected redis: Redis;
+    protected keyQueue: string;
+    protected dataQueue: string;
+    protected publishedQueue: string;
+    protected processingQueue: string;
+    protected notificationQueue: string;
     
     /**
      *
      */
     constructor(queueName: string, redis: Redis) {
-        this._redis = redis;
-        this._keyQueue = `${queueName}:keys`;
-        this._dataQueue = `${queueName}:data`;
-        this._publishedQueue = `${queueName}:published`;
-        this._processingQueue = `${queueName}:processing`;
-        this._notificationQueue = `${queueName}:notifications`;      
+        this.redis = redis;
+        this.keyQueue = `${queueName}:keys`;
+        this.dataQueue = `${queueName}:data`;
+        this.publishedQueue = `${queueName}:published`;
+        this.processingQueue = `${queueName}:processing`;
+        this.notificationQueue = `${queueName}:notifications`;      
           
     }
 
     protected getDataKeyByJobId(jobId: string): string {
-        return `${this._dataQueue}:${jobId}`;
+        return `${this.dataQueue}:${jobId}`;
     }
 }
