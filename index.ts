@@ -1,7 +1,11 @@
 import Redis from "ioredis";
 import Producer from "./src/producer";
 import Consumer from "./src/consumer";
+import QueueManager from "./src/queueManager";
 
+
+const queueManager = new QueueManager("test", new Redis());
+queueManager.start();
 
 const producer = new Producer("test", new Redis());
 const obj = {

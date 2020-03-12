@@ -4,6 +4,7 @@ export default class BaseService {
     
     protected redis: Redis;
     protected keyQueue: string;
+    protected queueName: string;
     protected dataQueue: string;
     protected publishedQueue: string;
     protected processingQueue: string;
@@ -14,6 +15,7 @@ export default class BaseService {
      */
     constructor(queueName: string, redis: Redis) {
         this.redis = redis;
+        this.queueName = queueName;
         this.keyQueue = `${queueName}:keys`;
         this.dataQueue = `${queueName}:data`;
         this.publishedQueue = `${queueName}:published`;
