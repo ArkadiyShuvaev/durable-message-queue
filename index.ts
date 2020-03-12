@@ -1,6 +1,6 @@
 import Redis from "ioredis";
-import Producer from "./producer";
-import Consumer from "./consumer";
+import Producer from "./src/producer";
+import Consumer from "./src/consumer";
 
 
 const producer = new Producer("test", new Redis());
