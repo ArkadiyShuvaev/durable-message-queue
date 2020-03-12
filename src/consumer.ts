@@ -21,7 +21,7 @@ export default class Consumer extends BaseService {
     }
 
     /**
-     * Subscribes the client to the specified channel.
+     * Subscribes the consumer to the specified channel.
      */
     async subscribe(callback: fArgVoid) {        
         try {
