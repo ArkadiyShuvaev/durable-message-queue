@@ -8,8 +8,6 @@ export default class BaseService {
     protected _publishedQueue: string;
     protected _processingQueue: string;
     protected _notificationQueue: string;
-    protected _payloadFieldName = "payload";
-    protected _createdDtFieldName = "createdDt";
     
     /**
      *
