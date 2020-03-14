@@ -12,9 +12,11 @@ export default class Producer extends BaseService {
     }
 
     /**
-     * Adds the item in to the queue to process and publish an event.
+     * Sends the message to the queue.
+     * In addition, the consumenr notification event is created.
+     * @param {string} messageRequest - The serialized object.
      */
-    public add(data: string): Promise<ActionResult> {
+    public send(messageRequest: string): Promise<ActionResult> {
 
         return new Promise<ActionResult>(async (res, rej) => {
             try {
@@ -23,7 +25,7 @@ export default class Producer extends BaseService {
 
                 const queueData: QueueData = {
                     createdDt: new Date().getTime(),
-                    payload: data
+                    payload: messageRequest
                 };
 
                 await this.redis

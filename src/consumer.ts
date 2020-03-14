@@ -12,16 +12,21 @@ export default class Consumer extends BaseService {
     /**
      * Creates an instance of the consumer.
      * Once the client enters the subscribed state it is not supposed to issue any other commands, 
-     * a second ready client is required.
+     * and the second Redis client is required.
+     * @param {Redis} redisClient - The Redis client to handle messages.
+     * @param {Redis} redisSubscribedClient - The Redis client to subscribe to new published messages.
     */
-    constructor(queueName: string, redis: Redis, redisInSubscribedState: Redis) {
-        super(queueName, redis);
+    constructor(queueName: string, redisClient: Redis, redisSubscribedClient: Redis) {
+        super(queueName, redisClient);
 
-        this.redisInSubscribedState = redisInSubscribedState;
+        this.redisInSubscribedState = redisSubscribedClient;
     }
 
     /**
-     * Subscribes the consumer to the specified channel.
+     * Starts consuming published messages.
+     * @param {fArgVoid} callback - The function that recieves serialized messages.
+     * Should return void to identify a message as successfuly processed.
+     * Should throw error to notify the queue manager to re-handle the message.
      */
     async subscribe(callback: fArgVoid) {        
         try {
