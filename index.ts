@@ -16,9 +16,9 @@ const obj = {
 const consumer = new Consumer("test", new Redis(), new Redis());
 
 consumer.subscribe((objAsStr) => {
-    console.table(JSON.parse(objAsStr));
+    console.table(JSON.parse(objAsStr));    
 }).then(() => {
-    producer.add(JSON.stringify(obj))
+    producer.send(JSON.stringify(obj))
     .then(() => console.log("OK"))
     .catch((err) => console.log("Something went wrong: " + err));
 });
