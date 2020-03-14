@@ -30,7 +30,7 @@ export default class Producer extends BaseService {
                     .multi()
                     .hset(dataKey, nameof<QueueData>("createdDt"), queueData.createdDt)
                     .hset(dataKey, nameof<QueueData>("payload"), queueData.payload)
-                    .rpush(this.publishedQueue, jobId)
+                    .lpush(this.publishedQueue, jobId)
                     .exec();
 
                 await this.redis.publish(this.notificationQueue, jobId.toString());
