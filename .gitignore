@@ -40,3 +40,10 @@ ehthumbs.db
 Thumbs.db
 redis-server.lnk
 redis-cli.lnk
+miscellaneous/commands.txt
+miscellaneous/luin-ioredis.url
+miscellaneous/manual.txt
+miscellaneous/sqs.url
+assests/diagrams/diagrams.drawio
+assests/diagrams/QueueDiagram.drawio
+assests/images/QueueDiagram.png
