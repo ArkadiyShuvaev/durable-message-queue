@@ -4,22 +4,36 @@ import Consumer from "./src/consumer";
 import QueueManager from "./src/queueManager";
 import Builder from "./src/builder";
 
+const queueName = "test";
 
-const queueManager = new QueueManager("test", new Redis());
-queueManager.start();
+const queueManager = Builder.createQueueManager(queueName);
+//queueManager.start();
 
-const producer = new Producer("test", new Redis());
+const producer = Builder.createProducer(queueName);
 const obj = {
-    userId: "123-ER-09", 
+    dummyString: new Date().toISOString(), 
     result: "success"
 };
 
-const consumer = Builder.createConsumer("test", { processingTimeout: 300 });
+producer
+    .send(JSON.stringify(obj))
+    .then(() => console.log("The producer sent a message to queue."))
+    .catch((err) =>
+        console.log(`Something went wrong and a message could not sent to the queue "${queueName}": ${err}`));
+    
+producer
+    .send(JSON.stringify(obj))
+    .then(() => console.log("The producer sent a message to queue."))
+    .catch((err) =>
+        console.log(`Something went wrong and a message could not sent to the queue "${queueName}": ${err}`));
+
+const consumer = Builder.createConsumer(queueName, { processingTimeout: 300 });
 
 consumer.subscribe((objAsStr) => {
     console.table(JSON.parse(objAsStr));    
 }).then(() => {
     producer.send(JSON.stringify(obj))
-    .then(() => console.log("OK"))
-    .catch((err) => console.log("Something went wrong: " + err));
+    .then(() => console.log("The producer sent a message to queue."))
+    .catch((err) =>
+        console.log(`Something went wrong and a message could not sent to the queue "${queueName}": ${err}`));
 });
