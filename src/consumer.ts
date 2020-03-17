@@ -29,29 +29,44 @@ export default class Consumer extends BaseService {
      * Should throw error to notify the queue manager to re-handle the message.
      */
     async subscribe(callback: fArgVoid) {        
-        try {
-            await this.redisInSubscribedState.subscribe(this.notificationQueue);
-            this.redisInSubscribedState.on("message", this.handler(callback));    
-        } catch (error) {
-            console.log(error);
-            throw(error);
+        await this.redisInSubscribedState.subscribe(this.notificationQueue);
+        this.redisInSubscribedState.on("message", async () => {
+            await this.processItemsInQueue(callback);
+        });
+
+        let jobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
+        while (jobId) {
+            await this.processJob(jobId, callback);
+            jobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
         }
     }   
 
-    private handler(callback: fArgVoid): (...args: any[]) => void {
-        return async () => {
+    private async processItemsInQueue(callback: fArgVoid) {
+        const jobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
+        if (jobId) {
+            await this.processJob(jobId, callback);
+        }
+    }
 
-            const processedJobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
-            const dataKey = this.getDataKeyByJobId(processedJobId);
-            const obj = <QueueData><unknown>(await this.redis.hgetall(dataKey));
+    private async processJob(jobId: string, callback: fArgVoid) {
+        const dataKey = this.getDataKeyByJobId(jobId);
+        const obj = <QueueData><unknown>(await this.redis.hgetall(dataKey));
+        if (!obj) {
+            console.error(`Object cannot be found using the ${dataKey} dataKey.`);
+            return;
+        }
 
+        try {
             callback(obj.payload);
-
+            
             await this.redis
                     .multi()
                     .hdel(dataKey, nameof<QueueData>("createdDt"), nameof<QueueData>("payload"))
-                    .lrem(this.processingQueue, 0, processedJobId)                    
+                    .lrem(this.processingQueue, 0, jobId)
                     .exec();
-        };
+
+        } catch (error) {
+            console.error(error);
+        }
     }
 }
