@@ -16,7 +16,7 @@ export default class QueueManager extends BaseService {
             throw Error(`${nameof<IAppConfiguration>("processingTimeout")}`);
         }
 
-        this.processingTimeoutMilliseconds = config.processingTimeout*1000;
+        this.processingTimeoutMilliseconds = config.processingTimeout * 1000;
     }
 
     start(): void {
@@ -24,7 +24,7 @@ export default class QueueManager extends BaseService {
             console.debug(`Processing the "${this.queueName}" queue...`);
 
             var jobIds = await this.redis.lrange(this.processingQueue, 0, -1);
-
+            
             jobIds.forEach(async jobId => {
                 const dataKey = this.getDataKeyByJobId(jobId.toString());                
                 const dateAsStr = await this.redis.hget(dataKey, nameof<QueueData>("createdDt"))
