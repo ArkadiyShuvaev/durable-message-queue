@@ -21,7 +21,7 @@ export default class Builder {
     }
 
     static createQueueManager(queueName: string, config?: IAppConfiguration): QueueManager {
-        this.setDefaultAppValues(config);
+        config = this.setDefaultAppValues(config);
         return new QueueManager(queueName, new Redis(config), config);
     }
     
