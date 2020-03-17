@@ -1,17 +1,22 @@
 import BaseService from "./baseService";
 import { Redis } from "ioredis";
-import { QueueData } from "./types";
+import { QueueData, IAppConfiguration } from "./types";
 import { nameof } from "./utils";
 
 export default class QueueManager extends BaseService {
-    private processTimeoutMilliseconds: number;
+    private processingTimeoutMilliseconds: number;
     
     /**
      *
      */
-    constructor(queueName: string, redis: Redis) {
+    constructor(queueName: string, redis: Redis, config?: IAppConfiguration) {
         super(queueName, redis);
-        this.processTimeoutMilliseconds = 60*15*1000; // 15 minutes
+
+        if (typeof config === "undefined" || typeof config.processingTimeout === "undefined") {
+            throw Error(`${nameof<IAppConfiguration>("processingTimeout")}`);
+        }
+
+        this.processingTimeoutMilliseconds = config.processingTimeout*1000;
     }
 
     start(): void {
@@ -28,8 +33,8 @@ export default class QueueManager extends BaseService {
                     const dateAsInt = parseInt(dateAsStr);                    
                     const subtractResult = new Date().getTime() - dateAsInt;
                     
-                    if (subtractResult > this.processTimeoutMilliseconds) {
-                        console.log(`Moving element older than ${this.processTimeoutMilliseconds/1000} seconds: ${new Date(dateAsInt)} to the ${this.publishedQueue} queue...`);
+                    if (subtractResult > this.processingTimeoutMilliseconds) {
+                        console.log(`Moving element older than ${this.processingTimeoutMilliseconds/1000} seconds: ${new Date(dateAsInt)} to the ${this.publishedQueue} queue...`);
                         await this.redis
                             .multi()
                             .hset(dataKey, "updatedDt", new Date().getTime())

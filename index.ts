@@ -2,6 +2,7 @@ import Redis from "ioredis";
 import Producer from "./src/producer";
 import Consumer from "./src/consumer";
 import QueueManager from "./src/queueManager";
+import Builder from "./src/builder";
 
 
 const queueManager = new QueueManager("test", new Redis());
@@ -13,7 +14,7 @@ const obj = {
     result: "success"
 };
 
-const consumer = new Consumer("test", new Redis(), new Redis());
+const consumer = Builder.createConsumer("test", { processingTimeout: 300 });
 
 consumer.subscribe((objAsStr) => {
     console.table(JSON.parse(objAsStr));    
