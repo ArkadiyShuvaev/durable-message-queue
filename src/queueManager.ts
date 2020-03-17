@@ -21,7 +21,7 @@ export default class QueueManager extends BaseService {
 
     start(): void {
         const timeOut = setInterval(async () => {
-            console.log(`Processing the "${this.queueName}" queue...`);
+            console.debug(`Processing the "${this.queueName}" queue...`);
 
             var jobIds = await this.redis.lrange(this.processingQueue, 0, -1);
 
@@ -34,7 +34,7 @@ export default class QueueManager extends BaseService {
                     const subtractResult = new Date().getTime() - dateAsInt;
                     
                     if (subtractResult > this.processingTimeoutMilliseconds) {
-                        console.log(`Moving element older than ${this.processingTimeoutMilliseconds/1000} seconds: ${new Date(dateAsInt)} to the ${this.publishedQueue} queue...`);
+                        console.debug(`Moving element older than ${this.processingTimeoutMilliseconds/1000} seconds: ${new Date(dateAsInt)} to the ${this.publishedQueue} queue...`);
                         await this.redis
                             .multi()
                             .hset(dataKey, "updatedDt", new Date().getTime())
