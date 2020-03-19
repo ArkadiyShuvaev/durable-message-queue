@@ -30,6 +30,11 @@ export default class Builder {
             config = {};
         }
 
+        // if (typeof config.showFriendlyErrorStack === "undefined" && DEBUG) {
+        //    // optimize the error stack: https://github.com/luin/ioredis#error-handling            
+        //    config.showFriendlyErrorStack = true;
+        //}
+
         if (typeof config.processingTimeout === "undefined") {
             config.processingTimeout = 300;
         }
