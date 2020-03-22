@@ -2,6 +2,7 @@ import { RedisOptions } from "ioredis";
 
 export interface QueueData {
     createdDt: number,
+    receivedDt?: number,
     payload: string
 }
 
@@ -11,4 +12,9 @@ export interface IAppConfiguration extends RedisOptions {
      * The default visibility timeout for a message is 300 seconds (5 minutes).
      */
      processingTimeout?: number
+}
+
+export interface Repository {
+    moveItemBackToQueue(messageKey: string, receivedDt: number,
+        moveFrom: string, moveTo: string, messageId: string): Promise<boolean>
 }
