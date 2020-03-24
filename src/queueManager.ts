@@ -5,7 +5,7 @@ import { nameof } from "./utils";
 
 export default class QueueManager extends BaseService {
     repo: Repository;
-    private processingTimeoutMilliseconds: number;
+    private processingTimeout: number;
     
     constructor(queueName: string, redis: Redis, repo: Repository, config?: IAppConfiguration) {
         super(queueName, redis);
@@ -15,7 +15,7 @@ export default class QueueManager extends BaseService {
         }
 
         this.repo = repo;
-        this.processingTimeoutMilliseconds = config.processingTimeout * 1000;
+        this.processingTimeout = config.processingTimeout;
     }
 
     start(): void {
@@ -28,14 +28,14 @@ export default class QueueManager extends BaseService {
                     
                     messageIds.forEach(async messageId => {
                         const messageKey = this.getDataKeyByJobId(messageId.toString());                
-                        const dateTimeAsStr = await this.redis.hget(messageKey, nameof<MessageMetaData>("createdDt"))
+                        const dateTimeAsStr = await this.redis.hget(messageKey, nameof<MessageMetaData>("receivedDt"))
                         
                         if (typeof dateTimeAsStr === "string") {                
                             const dateAsInt = parseInt(dateTimeAsStr);                    
                             const subtractResult = new Date().getTime() - dateAsInt;
                             
-                            if (subtractResult > this.processingTimeoutMilliseconds) {
-                                console.debug(`Moving element older than ${this.processingTimeoutMilliseconds/1000} seconds: ${new Date(dateAsInt)} to the ${this.publishedQueue} queue...`);
+                            if (subtractResult > this.processingTimeout  * 1000) {
+                                console.debug(`Moving element older than ${this.processingTimeout} seconds: ${new Date(dateAsInt)} to the ${this.publishedQueue} queue...`);
                                 
                                 const result = await this.repo.moveItemBackToQueue(
                                     messageKey, new Date().getTime(), this.processingQueue,
