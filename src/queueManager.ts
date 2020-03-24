@@ -1,6 +1,6 @@
 import BaseService from "./baseService";
 import { Redis } from "ioredis";
-import { QueueData, IAppConfiguration, Repository } from "./types";
+import { MessageMetaData, IAppConfiguration, Repository } from "./types";
 import { nameof } from "./utils";
 
 export default class QueueManager extends BaseService {
@@ -28,7 +28,7 @@ export default class QueueManager extends BaseService {
                     
                     messageIds.forEach(async messageId => {
                         const messageKey = this.getDataKeyByJobId(messageId.toString());                
-                        const dateTimeAsStr = await this.redis.hget(messageKey, nameof<QueueData>("createdDt"))
+                        const dateTimeAsStr = await this.redis.hget(messageKey, nameof<MessageMetaData>("createdDt"))
                         
                         if (typeof dateTimeAsStr === "string") {                
                             const dateAsInt = parseInt(dateTimeAsStr);                    

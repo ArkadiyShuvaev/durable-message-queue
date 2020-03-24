@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
-import { QueueData } from "./types";
+import { MessageMetaData } from "./types";
 import { nameof } from "./utils";
 
 export declare type fArgVoid = (object: string) => void;
@@ -50,7 +50,7 @@ export default class Consumer extends BaseService {
 
     private async processJob(jobId: string, callback: fArgVoid) {
         const dataKey = this.getDataKeyByJobId(jobId);
-        const obj = <QueueData><unknown>(await this.redis.hgetall(dataKey));
+        const obj = <MessageMetaData><unknown>(await this.redis.hgetall(dataKey));
         if (!obj) {
             console.error(`Object cannot be found using the ${dataKey} dataKey.`);
             return;
@@ -61,7 +61,7 @@ export default class Consumer extends BaseService {
             
             await this.redis
                     .multi()
-                    .hdel(dataKey, nameof<QueueData>("createdDt"), nameof<QueueData>("payload"))
+                    .hdel(dataKey, nameof<MessageMetaData>("createdDt"), nameof<MessageMetaData>("payload"))
                     .lrem(this.processingQueue, 0, jobId)
                     .exec();
 

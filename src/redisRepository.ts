@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import { Redis } from "ioredis";
-import {Repository, QueueData} from "./types";
+import {Repository, MessageMetaData} from "./types";
 import { nameof } from "./utils";
 
 export default class RedisRepository implements Repository {
@@ -14,7 +14,7 @@ export default class RedisRepository implements Repository {
     async moveItemBackToQueue(messageKey: string, receivedDt: number, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
         const luaScript = await this.getFileContent();
         const result = await this.redis.eval(luaScript, 3,
-            [messageKey, moveFrom, moveTo, nameof<QueueData>("receivedDt"), receivedDt, messageId ]);
+            [messageKey, moveFrom, moveTo, nameof<MessageMetaData>("receivedDt"), receivedDt, messageId ]);
           
         return result;
     }

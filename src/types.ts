@@ -1,6 +1,6 @@
 import { RedisOptions } from "ioredis";
 
-export interface QueueData {
+export interface MessageMetaData {
     createdDt: number,
     receivedDt?: number,
     payload: string
