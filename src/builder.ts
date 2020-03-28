@@ -14,7 +14,8 @@ export default class Builder {
      * @returns The consumer instance.
      */
     static createConsumer(queueName: string, config?: IAppConfiguration): Consumer {
-        return new Consumer(queueName, new Redis(config), new Redis(config));
+        const redisClient = new Redis(config);
+        return new Consumer(queueName, new RedisRepository(redisClient), redisClient, new Redis(config));
     }
 
     static createProducer(queueName: string, config?: IAppConfiguration): Producer {

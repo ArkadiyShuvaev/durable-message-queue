@@ -3,12 +3,12 @@ import { Redis } from "ioredis";
 export default class BaseService {
     
     protected redis: Redis;
-    protected keyQueue: string;
+    protected messageUniqId: string;
     protected queueName: string;
-    protected dataQueue: string;
-    protected publishedQueue: string;
-    protected processingQueue: string;
-    protected notificationQueue: string;
+    private messageQueue: string;
+    protected publishedIds: string;
+    protected processingIds: string;
+    protected notifications: string;
     
     /**
      *
@@ -16,15 +16,19 @@ export default class BaseService {
     constructor(queueName: string, redis: Redis) {
         this.redis = redis;
         this.queueName = queueName;
-        this.keyQueue = `${queueName}:keys`;
-        this.dataQueue = `${queueName}:data`;
-        this.publishedQueue = `${queueName}:published`;
-        this.processingQueue = `${queueName}:processing`;
-        this.notificationQueue = `${queueName}:notifications`;      
+        this.messageUniqId = `${queueName}:messageUniqId`;
+        this.messageQueue = `${queueName}:message`;
+        this.publishedIds = `${queueName}:publishedIds`;
+        this.processingIds = `${queueName}:processingIds`;
+        this.notifications = `${queueName}:notifications`;      
           
     }
 
-    protected getDataKeyByJobId(jobId: string): string {
-        return `${this.dataQueue}:${jobId}`;
+    protected getMessageResourceName(messageId: number): string {
+        return `${this.getMessageResourceNamePrexix()}${messageId}`;
+    }
+
+    protected getMessageResourceNamePrexix(): string {
+        return `${this.messageQueue}:`;
     }
 }

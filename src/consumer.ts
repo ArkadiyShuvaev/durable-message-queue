@@ -1,12 +1,14 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
-import { MessageMetaData } from "./types";
+import { Message } from "./types";
 import { nameof } from "./utils";
+import RedisRepository from "./redisRepository";
 
-export declare type fArgVoid = (object: string) => void;
+export declare type fArgVoid = (object: Message) => void;
 
 export default class Consumer extends BaseService {
     
+    repo: RedisRepository;
     redisInSubscribedState: Redis;
     
     /**
@@ -14,11 +16,13 @@ export default class Consumer extends BaseService {
      * Once the client enters the subscribed state it is not supposed to issue any other commands, 
      * and the second Redis client is required.
      * @param {Redis} redisClient - The Redis client to handle messages.
+     * @param {RedisRepository} redisRepository - The Redis repository.
      * @param {Redis} redisSubscribedClient - The Redis client to subscribe to new published messages.
     */
-    constructor(queueName: string, redisClient: Redis, redisSubscribedClient: Redis) {
+    constructor(queueName: string, redisRepository: RedisRepository, redisClient: Redis, redisSubscribedClient: Redis) {
         super(queueName, redisClient);
-
+        
+        this.repo = redisRepository;
         this.redisInSubscribedState = redisSubscribedClient;
     }
 
@@ -29,41 +33,38 @@ export default class Consumer extends BaseService {
      * Should throw error to notify the queue manager to re-handle the message.
      */
     async subscribe(callback: fArgVoid) {        
-        await this.redisInSubscribedState.subscribe(this.notificationQueue);
+        await this.redisInSubscribedState.subscribe(this.notifications);
         this.redisInSubscribedState.on("message", async () => {
             await this.processItemsInQueue(callback);
         });
 
-        let jobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
-        while (jobId) {
-            await this.processJob(jobId, callback);
-            jobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
+        let message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
+        while (message) {
+            await this.processJob(message, callback);
+            message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
         }
     }   
 
     private async processItemsInQueue(callback: fArgVoid) {
-        const jobId = await this.redis.rpoplpush(this.publishedQueue, this.processingQueue);
-        if (jobId) {
-            await this.processJob(jobId, callback);
+        const message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
+        if (message) {
+            await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
         }
     }
 
-    private async processJob(jobId: string, callback: fArgVoid) {
-        const dataKey = this.getDataKeyByJobId(jobId);
-        const obj = <MessageMetaData><unknown>(await this.redis.hgetall(dataKey));
-        if (!obj) {
-            console.error(`Object cannot be found using the ${dataKey} dataKey.`);
-            return;
-        }
-
+    private async processJob(message: Message, callback: fArgVoid) {
+        
         try {
-            callback(obj.payload);
-            
+            callback(message);
+
+            const messageResourceName = this.getMessageResourceName(message.id);
+
             await this.redis
                     .multi()
-                    .hdel(dataKey, nameof<MessageMetaData>("createdDt"), nameof<MessageMetaData>("payload"))
-                    .lrem(this.processingQueue, 0, jobId)
+                    .del(messageResourceName)
+                    .lrem(this.processingIds, 0, message.id)
                     .exec();
+
 
         } catch (error) {
             console.error(error);

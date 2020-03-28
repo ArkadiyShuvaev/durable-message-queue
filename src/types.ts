@@ -1,6 +1,7 @@
 import { RedisOptions } from "ioredis";
 
-export interface MessageMetaData {
+export interface Message {
+    id: number,
     createdDt: number,
     receivedDt?: number,
     payload: string
@@ -17,4 +18,6 @@ export interface IAppConfiguration extends RedisOptions {
 export interface Repository {
     moveItemBackToQueue(messageKey: string, receivedDt: number,
         moveFrom: string, moveTo: string, messageId: string): Promise<boolean>
+
+    getMessage(moveFrom: string, moveTo:string, messageQueuePrefix:string): Promise<Message>
 }
