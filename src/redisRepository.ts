@@ -7,12 +7,13 @@ import { rejects } from "assert";
 export default class RedisRepository implements Repository {
     
     private redis: Redis;
-    private luaCommand: string | undefined;
+    private _returnMessageToQueueLuaScript: string | undefined;
+    private _getMessageFromQueueLuaScript: string | undefined;
     private readonly returnMessageToQueueFileName = "src/lua-scripts/returnMessageToQueue.lua";
     private readonly getMessageFromQueueFileName = "src/lua-scripts/getMessageFromQueue.lua";
 
     constructor(redis: Redis) {
-        this.redis = redis; 
+        this.redis = redis;
     }
 
     /**
@@ -27,9 +28,12 @@ export default class RedisRepository implements Repository {
                 
                 let result: object | undefined = undefined;
                 
-                const luaScript = await this.getFileContent(this.getMessageFromQueueFileName);                
-                const array = await this.redis.eval(luaScript, 3, // set 2 to crash lua script and test the transaction
-                    [moveFrom, moveTo, messageResourceNamePrefix, nameof<Message>("receivedDt"), new Date().getTime() ]);
+                const luaScript = await this.getMessageFromQueueLuaScript();              
+                const now = new Date().getTime();
+                const array = await this.redis.eval(luaScript, 3,
+                    moveFrom, moveTo, messageResourceNamePrefix,
+                    nameof<Message>("receiveCount"), nameof<Message>("receivedDt"),
+                    nameof<Message>("updatedDt"), now, now);
  
                 if (array) {
                     let result: any = {};
@@ -50,27 +54,49 @@ export default class RedisRepository implements Repository {
     }
     
     async moveItemBackToQueue(messageResourceName: string, receivedDt: number, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
-        const luaScript = await this.getFileContent(this.returnMessageToQueueFileName);
-        const result = await this.redis.eval(luaScript, 3,
-            [messageResourceName, moveFrom, moveTo, nameof<Message>("receivedDt"), receivedDt, messageId ]);
-          
-        return result;
+        return new Promise(async (res, rej) => {
+            try {
+                const luaScript = await this.returnMessageToQueueLuaScript();
+                const result:boolean = await this.redis.eval(luaScript, 3,
+                    messageResourceName, moveFrom, moveTo, nameof<Message>("receivedDt"),
+                    nameof<Message>("updatedDt"), new Date().getTime(), messageId);
+                
+                return res(result);
+
+            } catch (error) {
+                rej(error)
+            }
+        });
     }
 
-    private async getFileContent(fileName: string): Promise<string> {
+    private async getMessageFromQueueLuaScript(): Promise<string> {
+        
         return new Promise<string>(async (res, rej) => {
             try {
-                if (!this.luaCommand) {
-                    const data = await fs.readFile(fileName); //  10.0.0 + is required
-                    this.luaCommand = Buffer.from(data).toString("utf8");
+                if (!this._getMessageFromQueueLuaScript) {
+                    const data = await fs.readFile(this.getMessageFromQueueFileName); //  10.0.0 + is required
+                    this._getMessageFromQueueLuaScript = Buffer.from(data).toString("utf8");
                 }
-                return res(this.luaCommand);
+                return res(this._getMessageFromQueueLuaScript);
 
             } catch(err) {
-                console.error(err);
                 rej(err);
             }
         });
     }
 
+    private async returnMessageToQueueLuaScript(): Promise<string> {        
+        return new Promise<string>(async (res, rej) => {
+            try {
+                if (!this._returnMessageToQueueLuaScript) {
+                    const data = await fs.readFile(this.returnMessageToQueueFileName); //  10.0.0 + is required
+                    this._returnMessageToQueueLuaScript = Buffer.from(data).toString("utf8");
+                }
+                return res(this._returnMessageToQueueLuaScript);
+
+            } catch(err) {
+                rej(err);
+            }
+        });
+    }
 }

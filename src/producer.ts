@@ -22,17 +22,22 @@ export default class Producer extends BaseService {
                 const messageId = await this.redis.incr(this.messageUniqId);
                 const messageResourceName = this.getMessageResourceName(messageId);
 
+                const now = new Date().getTime();
                 const message: Message = {
                     id: messageId,
-                    createdDt: new Date().getTime(),
-                    payload: messageRequest
+                    createdDt: now,
+                    updatedDt: now,
+                    payload: messageRequest,
+                    receiveCount: 0
                 };
 
                 await this.redis
                     .multi()
                     .hset(messageResourceName, nameof<Message>("id"), message.id)
-                    .hset(messageResourceName, nameof<Message>("createdDt"), message.createdDt)
                     .hset(messageResourceName, nameof<Message>("payload"), message.payload)
+                    .hset(messageResourceName, nameof<Message>("createdDt"), message.createdDt)
+                    .hset(messageResourceName, nameof<Message>("updatedDt"), message.updatedDt)
+                    .hset(messageResourceName, nameof<Message>("receiveCount"), message.receiveCount)
                     .lpush(this.publishedIds, messageId)
                     .exec();
 

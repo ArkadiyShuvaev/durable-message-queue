@@ -1,19 +1,27 @@
-local function returnMessageToPublishedQueue(k1, k2, k3, a1, a2, a3)
-    if (k1 == nil or k2 == nil or k3 == nill or a1 == nil or a2 == nil or a3 == nil) then 
-        error("argument cannot be nil: " .. k1 .. k2 .. k3 .. a1 .. a2 .. a3)
+local function returnMessageToQueue(messageResourceName, moveFrom, moveTo,
+                                    receivedDtFieldName, updatedDtFieldName, updatedDt, messageId)
+
+    if (messageResourceName == nil or moveFrom == nil or moveTo == nil
+            or receivedDtFieldName == nil or updatedDtFieldName == nil or updatedDt == nil or messageId == nil) then 
+        error("argument cannot be nil: " .. messageResourceName .. moveFrom .. moveTo 
+                .. receivedDtFieldName  .. updatedDtFieldName .. updatedDt .. messageId)
     end
     
     local operationResult = false
-    if redis.call("exists", KEYS[1]) == 1 then        
+    if redis.call("exists", messageResourceName) == 1 then        
+        
         --hset("queueName:message:1", "updatedDt", "1584480486476")
-        redis.call("hset", KEYS[1], ARGV[1], ARGV[2])
-        
+        redis.call("hset", messageResourceName, updatedDtFieldName, updatedDt)
+
+        --hdel("queueName:message:1", "receivedDt")
+        redis.call("hdel", messageResourceName, receivedDtFieldName)
+
         --lrem(this.processing, 0, messageId)
-        local removeResult = redis.call("lrem", KEYS[2], 0, ARGV[3]) 
+        local removeFromResult = redis.call("lrem", moveFrom, 0, messageId) 
         
-        if removeResult >= 1 or (type(removeResult) == "boolean" and removeResult) then 
+        if removeFromResult >= 1 or (type(removeFromResult) == "boolean" and removeFromResult) then 
             --lpush(this.published, messageId)
-            redis.call("lpush", KEYS[3], ARGV[3])
+            redis.call("lpush", moveTo, messageId)
             operationResult = true
         end
     end
@@ -21,4 +29,4 @@ local function returnMessageToPublishedQueue(k1, k2, k3, a1, a2, a3)
     return operationResult
 end
 
-return (getMessageFromQueue(KEYS[1], KEYS[2], KEYS[3], ARGV[1], ARGV[2], ARGV[3]))
+return (returnMessageToQueue(KEYS[1], KEYS[2], KEYS[3], ARGV[1], ARGV[2], ARGV[3], ARGV[4]))

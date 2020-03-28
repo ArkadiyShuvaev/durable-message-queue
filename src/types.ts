@@ -4,7 +4,9 @@ export interface Message {
     id: number,
     createdDt: number,
     receivedDt?: number,
-    payload: string
+    payload: string,
+    receiveCount: number,
+    updatedDt: number
 }
 
 export interface IAppConfiguration extends RedisOptions {
