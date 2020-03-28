@@ -10,7 +10,8 @@ local function getMessageFromQueue(k1, k2, k3, a1, a2)
     end
     
     local result = nil
-    local messageId = redis.call("rpoplpush", k1, k2)    --rpoplpush("queueName:publishedIds", "queueName:processingIds");
+    --rpoplpush("queueName:publishedIds", "queueName:processingIds");
+    local messageId = redis.call("rpoplpush", k1, k2)
     
     if (messageId == nil or (type(messageId) == "boolean" and not messageId)) then
         return result
@@ -18,8 +19,10 @@ local function getMessageFromQueue(k1, k2, k3, a1, a2)
 
     local messageKey = k3..messageId
     if redis.call("exists", messageKey) == 1 then
-        redis.call("hset", messageKey, a1, a2) --hset("queueName:message:1", "receivedDt", "1584480486476")
-        result = redis.call("hgetall", messageKey)       --hgetall(dataKey)
+        --hset("queueName:message:1", "receivedDt", "1584480486476")
+        redis.call("hset", messageKey, a1, a2)
+        --hgetall(dataKey)
+        result = redis.call("hgetall", messageKey)
     end
     
     return result
