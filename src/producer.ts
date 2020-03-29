@@ -1,14 +1,16 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
 import ActionResult from "./actionResult";
-import { Message } from "./types";
+import { Message, Repository } from "./types";
 import { nameof } from "./utils";
 
 
 export default class Producer extends BaseService {
+    repo: Repository;
 
-    constructor(queueName: string, redis: Redis) {
+    constructor(queueName: string, repo:Repository, redis: Redis) {
         super(queueName, redis);
+        this.repo = repo;
     }
 
     /**
@@ -41,7 +43,7 @@ export default class Producer extends BaseService {
                     .lpush(this.publishedIds, messageId)
                     .exec();
 
-                await this.redis.publish(this.notifications, messageId.toString());
+                await this.repo.sendNotification(this.notifications, messageId.toString());
 
                 res({
                     isSuccess: true,
