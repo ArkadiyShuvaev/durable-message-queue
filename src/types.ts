@@ -18,6 +18,7 @@ export interface IAppConfiguration extends RedisOptions {
 }
 
 export interface Repository {
+    sendNotification(notificationQueue: string, message: string): Promise<number>;
     moveItemBackToQueue(messageKey: string, receivedDt: number,
         moveFrom: string, moveTo: string, messageId: string): Promise<boolean>
 

@@ -68,6 +68,13 @@ export default class RedisRepository implements Repository {
         });
     }
 
+    /**
+     * Posts a message to the notification channel.
+     */
+    async sendNotification(notificationQueue: string, message: string): Promise<number> {
+        return await this.redis.publish(notificationQueue, message);
+    }
+
     private async getMessageFromQueueLuaScript(): Promise<string> {
 
         return new Promise<string>(async (res, rej) => {

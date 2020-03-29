@@ -42,7 +42,9 @@ export default class QueueManager extends BaseService {
                                     this.publishedIds, messageId);
 
                                 if (result) {
-                                    console.debug(`The ${messageId} message id has successfully been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`);
+                                    const msg = `The ${messageId} message id has successfully been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`;
+                                    console.debug(msg);
+                                    this.repo.sendNotification(this.notifications, msg);
                                 } else {
                                     console.debug(`The ${messageId} message id could not been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`);
                                 }

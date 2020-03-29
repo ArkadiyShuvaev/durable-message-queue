@@ -18,7 +18,8 @@ export default class Builder {
     }
 
     static createProducer(queueName: string, config?: IAppConfiguration): Producer {
-        return new Producer(queueName, new Redis(config));
+        const redisClient = new Redis(config);
+        return new Producer(queueName, new RedisRepository(redisClient), redisClient);
     }
 
     static createQueueManager(queueName: string, config?: IAppConfiguration): QueueManager {
