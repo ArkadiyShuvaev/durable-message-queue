@@ -34,10 +34,12 @@ export default class Consumer extends BaseService {
      */
     async subscribe(callback: fArgVoid) {
         await this.redisInSubscribedState.subscribe(this.notifications);
+        console.debug(`The consumer has succesfully subscribed to new messages in the ${this.publishedIds} queue.`);
         this.redisInSubscribedState.on("message", async () => {
             await this.processItemsInQueue(callback);
         });
 
+        console.debug(`Checking messages in the ${this.publishedIds} queue...`);
         let message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
         while (message) {
             await this.processJob(message, callback);
@@ -48,13 +50,15 @@ export default class Consumer extends BaseService {
     private async processItemsInQueue(callback: fArgVoid) {
         const message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
         if (message) {
-            await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
+            await this.processJob(message, callback);
         }
     }
 
     private async processJob(message: Message, callback: fArgVoid) {
 
         try {
+            console.debug(`Start processing the ${message.id} message id.`);
+
             callback(message);
 
             const messageResourceName = this.getMessageResourceName(message.id);
