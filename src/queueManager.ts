@@ -26,8 +26,9 @@ export default class QueueManager extends BaseService {
 
                     var messageIds = await this.redis.lrange(this.processingIds, 0, -1);
 
-                    messageIds.forEach(async messageId => {
-                        const messageResourceName = this.getMessageResourceName(parseInt(messageId));
+                    messageIds.forEach(async messageIdAsStr => {
+                        const messageId = parseInt(messageIdAsStr);
+                        const messageResourceName = this.getMessageResourceName(messageId);
                         const dateTimeAsStr = await this.redis.hget(messageResourceName, nameof<Message>("receivedDt"))
 
                         if (typeof dateTimeAsStr === "string") {
@@ -35,18 +36,18 @@ export default class QueueManager extends BaseService {
                             const subtractResult = new Date().getTime() - dateAsInt;
 
                             if (subtractResult > this.processingTimeout  * 1000) {
-                                console.debug(`Moving ${messageId} message id older than ${this.processingTimeout} seconds to the ${this.publishedIds} queue...`);
+                                console.debug(`Moving ${messageIdAsStr} message id older than ${this.processingTimeout} seconds to the ${this.publishedIds} queue...`);
 
-                                const result = await this.repo.moveItemBackToQueue(
+                                const result = await this.repo.returnMessage(
                                     messageResourceName, new Date().getTime(), this.processingIds,
-                                    this.publishedIds, messageId);
+                                    this.publishedIds, messageIdAsStr);
 
                                 if (result) {
-                                    const msg = `The ${messageId} message id has successfully been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`;
+                                    const msg = `The ${messageIdAsStr} message id has successfully been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`;
                                     console.debug(msg);
-                                    this.repo.sendNotification(this.notifications, msg);
+                                    this.repo.sendNotification(this.notifications, messageId);
                                 } else {
-                                    console.debug(`The ${messageId} message id could not been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`);
+                                    console.debug(`The ${messageIdAsStr} message id could not been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`);
                                 }
 
                             }

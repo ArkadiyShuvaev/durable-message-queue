@@ -15,12 +15,6 @@ export default class RedisRepository implements Repository {
         this.redis = redis;
     }
 
-    /**
-     * Gets a message from the published queue to process.
-     * @param {string} messageResourceNamePrefix - The prefix for the Redis key that stores
-     * all message keys ('payload' key, 'createdDt' key, 'receivedDt' key, etc) without a message id.
-     * E.g. 'userRegistration:message:'
-     */
     async getMessage(moveFrom: string, moveTo: string, messageResourceNamePrefix: string): Promise<Message> {
         return new Promise(async (res, rej) => {
             try {
@@ -52,12 +46,12 @@ export default class RedisRepository implements Repository {
         });
     }
 
-    async moveItemBackToQueue(messageResourceName: string, receivedDt: number, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
+    async returnMessage(messageFullName: string, receivedDt: number, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
         return new Promise(async (res, rej) => {
             try {
                 const luaScript = await this.returnMessageToQueueLuaScript();
                 const result:boolean = await this.redis.eval(luaScript, 3,
-                    messageResourceName, moveFrom, moveTo, nameof<Message>("receivedDt"),
+                    messageFullName, moveFrom, moveTo, nameof<Message>("receivedDt"),
                     nameof<Message>("updatedDt"), new Date().getTime(), messageId);
 
                 return res(result);
@@ -68,21 +62,18 @@ export default class RedisRepository implements Repository {
         });
     }
 
-    /**
-     * Posts a message to the notification channel.
-     */
-    async sendNotification(notificationQueue: string, message: string): Promise<number> {
-        return await this.redis.publish(notificationQueue, message);
+    async sendNotification(notificationQueue: string, messageId: number): Promise<number> {
+        return await this.redis.publish(notificationQueue, messageId.toString());
     }
 
-    async addMessage(messageResourceName: string, addTo:string, message: Message): Promise<Array<[Error | null, any]>> {
+    async addMessage(messageFullName: string, addTo:string, message: Message): Promise<Array<[Error | null, any]>> {
         return await this.redis
             .multi()
-            .hset(messageResourceName, nameof<Message>("id"), message.id)
-            .hset(messageResourceName, nameof<Message>("payload"), message.payload)
-            .hset(messageResourceName, nameof<Message>("createdDt"), message.createdDt)
-            .hset(messageResourceName, nameof<Message>("updatedDt"), message.updatedDt)
-            .hset(messageResourceName, nameof<Message>("receiveCount"), message.receiveCount)
+            .hset(messageFullName, nameof<Message>("id"), message.id)
+            .hset(messageFullName, nameof<Message>("payload"), message.payload)
+            .hset(messageFullName, nameof<Message>("createdDt"), message.createdDt)
+            .hset(messageFullName, nameof<Message>("updatedDt"), message.updatedDt)
+            .hset(messageFullName, nameof<Message>("receiveCount"), message.receiveCount)
             .lpush(addTo, message.id)
             .exec();
     }
