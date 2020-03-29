@@ -2,10 +2,9 @@ import { promises as fs } from "fs";
 import { Redis } from "ioredis";
 import {Repository, Message} from "./types";
 import { nameof } from "./utils";
-import { rejects } from "assert";
 
 export default class RedisRepository implements Repository {
-    
+
     private redis: Redis;
     private _returnMessageToQueueLuaScript: string | undefined;
     private _getMessageFromQueueLuaScript: string | undefined;
@@ -18,27 +17,27 @@ export default class RedisRepository implements Repository {
 
     /**
      * Gets a message from the published queue to process.
-     * @param {string} messageResourceNamePrefix - The prefix for the Redis key that stores 
-     * all message keys ('payload' key, 'createdDt' key, 'receivedDt' key, etc) without a message id. 
+     * @param {string} messageResourceNamePrefix - The prefix for the Redis key that stores
+     * all message keys ('payload' key, 'createdDt' key, 'receivedDt' key, etc) without a message id.
      * E.g. 'userRegistration:message:'
      */
     async getMessage(moveFrom: string, moveTo: string, messageResourceNamePrefix: string): Promise<Message> {
         return new Promise(async (res, rej) => {
             try {
-                
+
                 let result: object | undefined = undefined;
-                
-                const luaScript = await this.getMessageFromQueueLuaScript();              
+
+                const luaScript = await this.getMessageFromQueueLuaScript();
                 const now = new Date().getTime();
                 const array = await this.redis.eval(luaScript, 3,
                     moveFrom, moveTo, messageResourceNamePrefix,
                     nameof<Message>("receiveCount"), nameof<Message>("receivedDt"),
                     nameof<Message>("updatedDt"), now, now);
- 
+
                 if (array) {
                     let result: any = {};
                     for (let idx = 0; idx < array.length; idx = idx + 2) {
-                        
+
                         result[array[idx]] = array[idx+1];
                     }
 
@@ -52,7 +51,7 @@ export default class RedisRepository implements Repository {
             }
         });
     }
-    
+
     async moveItemBackToQueue(messageResourceName: string, receivedDt: number, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
         return new Promise(async (res, rej) => {
             try {
@@ -60,7 +59,7 @@ export default class RedisRepository implements Repository {
                 const result:boolean = await this.redis.eval(luaScript, 3,
                     messageResourceName, moveFrom, moveTo, nameof<Message>("receivedDt"),
                     nameof<Message>("updatedDt"), new Date().getTime(), messageId);
-                
+
                 return res(result);
 
             } catch (error) {
@@ -70,7 +69,7 @@ export default class RedisRepository implements Repository {
     }
 
     private async getMessageFromQueueLuaScript(): Promise<string> {
-        
+
         return new Promise<string>(async (res, rej) => {
             try {
                 if (!this._getMessageFromQueueLuaScript) {
@@ -85,7 +84,7 @@ export default class RedisRepository implements Repository {
         });
     }
 
-    private async returnMessageToQueueLuaScript(): Promise<string> {        
+    private async returnMessageToQueueLuaScript(): Promise<string> {
         return new Promise<string>(async (res, rej) => {
             try {
                 if (!this._returnMessageToQueueLuaScript) {

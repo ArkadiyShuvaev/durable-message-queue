@@ -7,10 +7,10 @@ import RedisRepository from "./redisRepository";
 export declare type fArgVoid = (object: Message) => void;
 
 export default class Consumer extends BaseService {
-    
+
     repo: RedisRepository;
     redisInSubscribedState: Redis;
-    
+
     /**
      * Creates an instance of the consumer.
      * Once the client enters the subscribed state it is not supposed to issue any other commands, 
@@ -21,7 +21,7 @@ export default class Consumer extends BaseService {
     */
     constructor(queueName: string, redisRepository: RedisRepository, redisClient: Redis, redisSubscribedClient: Redis) {
         super(queueName, redisClient);
-        
+
         this.repo = redisRepository;
         this.redisInSubscribedState = redisSubscribedClient;
     }
@@ -32,7 +32,7 @@ export default class Consumer extends BaseService {
      * Should return void to identify a message as successfuly processed.
      * Should throw error to notify the queue manager to re-handle the message.
      */
-    async subscribe(callback: fArgVoid) {        
+    async subscribe(callback: fArgVoid) {
         await this.redisInSubscribedState.subscribe(this.notifications);
         this.redisInSubscribedState.on("message", async () => {
             await this.processItemsInQueue(callback);
@@ -43,7 +43,7 @@ export default class Consumer extends BaseService {
             await this.processJob(message, callback);
             message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
         }
-    }   
+    }
 
     private async processItemsInQueue(callback: fArgVoid) {
         const message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
@@ -53,7 +53,7 @@ export default class Consumer extends BaseService {
     }
 
     private async processJob(message: Message, callback: fArgVoid) {
-        
+
         try {
             callback(message);
 

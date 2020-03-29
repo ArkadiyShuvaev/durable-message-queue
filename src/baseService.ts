@@ -1,7 +1,7 @@
 import { Redis } from "ioredis";
 
 export default class BaseService {
-    
+
     protected redis: Redis;
     protected messageUniqId: string;
     protected queueName: string;
@@ -9,7 +9,7 @@ export default class BaseService {
     protected publishedIds: string;
     protected processingIds: string;
     protected notifications: string;
-    
+
     /**
      *
      */
@@ -20,8 +20,7 @@ export default class BaseService {
         this.messageQueue = `${queueName}:message`;
         this.publishedIds = `${queueName}:publishedIds`;
         this.processingIds = `${queueName}:processingIds`;
-        this.notifications = `${queueName}:notifications`;      
-          
+        this.notifications = `${queueName}:notifications`;
     }
 
     protected getMessageResourceName(messageId: number): string {

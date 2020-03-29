@@ -1,31 +1,25 @@
--- KEYS[1] - the key of the published messages queue
--- KEYS[2] - the key of the processing messages queue
--- KEYS[3] - the resource name prefix for the Redis key that stores all message keys (e.g. "registrations:message:")
--- ARGV[1] - the name of the field is updated when a message is retrieved from the published queue (e.g. receivedDt)
--- ARGV[2] - the value that should be assigned to the ARGV[1]
-
 local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix,
     receiveCountFieldName, receivedDtFieldName, updatedDtFieldName, receivedDt, updatedDt)
-    
+
     if (moveFrom == nil or moveTo == nil or messageResourceNamePrefix == nil
         or receiveCountFieldName == nil or receivedDtFieldName == nil or updatedDtFieldName == nil
-        or receivedDt == nil or updatedDt == nil) then 
-        error("argument cannot be nil: " .. moveFrom .. moveTo .. messageResourceNamePrefix 
-        .. receiveCountFieldName .. receivedDtFieldName .. updatedDtFieldName
-        .. receivedDt .. updatedDt)
+        or receivedDt == nil or updatedDt == nil) then
+        error("argument cannot be nil: " .. moveFrom .. moveTo .. messageResourceNamePrefix
+            .. receiveCountFieldName .. receivedDtFieldName .. updatedDtFieldName
+            .. receivedDt .. updatedDt)
     end
-    
+
     local result = nil
     --rpoplpush("queueName:publishedIds", "queueName:processingIds");
     local messageId = redis.call("rpoplpush", moveFrom, moveTo)
-    
+
     if (messageId == nil or (type(messageId) == "boolean" and not messageId)) then
         return result
     end
 
     local messageResourceName = messageResourceNamePrefix..messageId
     if redis.call("exists", messageResourceName) == 1 then
-        
+
         local receiveCount = redis.call("hget", messageResourceName, receiveCountFieldName)
         redis.call("echo", tostring(receiveCount))
         if (receiveCount == nil or (type(receiveCount) == "boolean" and not receiveCount)) then
@@ -38,14 +32,14 @@ local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix,
 
         --hset("queueName:message:1", "receivedDt", "1584480486476")
         redis.call("hset", messageResourceName, receivedDtFieldName, receivedDt)
-        
+
         --hset("queueName:message:1", "updatedDt", "1584480486476")
         redis.call("hset", messageResourceName, updatedDtFieldName, updatedDt)
-        
+
         --hgetall(dataKey)
         result = redis.call("hgetall", messageResourceName)
     end
-    
+
     return result
 end
 

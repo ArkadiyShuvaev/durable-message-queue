@@ -3,7 +3,6 @@ import Redis from "ioredis";
 import { IAppConfiguration } from "./types";
 import Producer from "./producer";
 import QueueManager from "./queueManager";
-import { nameof } from "./utils";
 import RedisRepository from "./redisRepository";
 
 export default class Builder {
@@ -27,14 +26,14 @@ export default class Builder {
         const redisClient = new Redis(config);
         return new QueueManager(queueName, redisClient, new RedisRepository(redisClient), config);
     }
-    
+
     private static setDefaultAppValues(config?: IAppConfiguration) {
         if (typeof config === "undefined") {
             config = {};
         }
 
         // if (typeof config.showFriendlyErrorStack === "undefined" && DEBUG) {
-        //    // optimize the error stack: https://github.com/luin/ioredis#error-handling            
+        //    // optimize the error stack: https://github.com/luin/ioredis#error-handling
         //    config.showFriendlyErrorStack = true;
         //}
 
