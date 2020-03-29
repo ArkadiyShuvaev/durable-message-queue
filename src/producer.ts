@@ -43,11 +43,12 @@ export default class Producer extends BaseService {
                     .lpush(this.publishedIds, messageId)
                     .exec();
 
+                console.debug(`The producer sent a message ${messageId} to the ${this.publishedIds} queue.`);
                 await this.repo.sendNotification(this.notifications, messageId.toString());
 
                 res({
                     isSuccess: true,
-                    message: `The '${messageId}' message id has been sucessfully added into the queue to process.`
+                    message: `The '${messageId}' message id has successfully been added into the queue to process.`
                 });
 
             } catch (e) {
