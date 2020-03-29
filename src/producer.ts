@@ -33,15 +33,7 @@ export default class Producer extends BaseService {
                     receiveCount: 0
                 };
 
-                await this.redis
-                    .multi()
-                    .hset(messageResourceName, nameof<Message>("id"), message.id)
-                    .hset(messageResourceName, nameof<Message>("payload"), message.payload)
-                    .hset(messageResourceName, nameof<Message>("createdDt"), message.createdDt)
-                    .hset(messageResourceName, nameof<Message>("updatedDt"), message.updatedDt)
-                    .hset(messageResourceName, nameof<Message>("receiveCount"), message.receiveCount)
-                    .lpush(this.publishedIds, messageId)
-                    .exec();
+                await this.repo.addMessage(messageResourceName, this.publishedIds, message);
 
                 console.debug(`The producer sent a message ${messageId} to the ${this.publishedIds} queue.`);
                 await this.repo.sendNotification(this.notifications, messageId.toString());
