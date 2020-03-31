@@ -14,7 +14,7 @@ export default class Producer extends BaseService {
     }
 
     /**
-     * Sends the message to the queue and creates the consumenr notification event.
+     * Sends the message to the queue and creates the consumer notification event.
      * @param {string} messageRequest - The serialized object.
      */
     public send(messageRequest: string): Promise<ActionResult> {
