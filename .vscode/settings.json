@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "hget",
+        "hincrby",
         "hset",
         "lpush",
         "lrange",
