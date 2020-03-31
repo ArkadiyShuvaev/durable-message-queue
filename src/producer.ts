@@ -24,7 +24,7 @@ export default class Producer extends BaseService {
                 const messageId = await this.redis.incr(this.messageUniqId);
                 const messageResourceName = this.getMessageResourceName(messageId);
 
-                const now = new Date().getTime();
+                const now = new Date().toISOString();
                 const message: Message = {
                     id: messageId,
                     createdDt: now,

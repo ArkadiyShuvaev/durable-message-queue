@@ -46,13 +46,13 @@ export default class RedisRepository implements Repository {
         });
     }
 
-    async returnMessage(messageFullName: string, receivedDt: number, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
+    async returnMessage(messageFullName: string, updatedDt: string, moveFrom: string, moveTo: string, messageId: string): Promise<boolean> {
         return new Promise(async (res, rej) => {
             try {
                 const luaScript = await this.returnMessageToQueueLuaScript();
                 const result:boolean = await this.redis.eval(luaScript, 3,
                     messageFullName, moveFrom, moveTo, nameof<Message>("receivedDt"),
-                    nameof<Message>("updatedDt"), new Date().getTime(), messageId);
+                    nameof<Message>("updatedDt"), updatedDt, messageId);
 
                 return res(result);
 

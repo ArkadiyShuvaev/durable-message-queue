@@ -32,14 +32,14 @@ export default class QueueManager extends BaseService {
                         const dateTimeAsStr = await this.redis.hget(messageResourceName, nameof<Message>("receivedDt"))
 
                         if (typeof dateTimeAsStr === "string") {
-                            const dateAsInt = parseInt(dateTimeAsStr);
-                            const subtractResult = new Date().getTime() - dateAsInt;
+                            const unixEpochMillisec = new Date(dateTimeAsStr).getTime();
+                            const subtractResult = new Date().getTime() - unixEpochMillisec;
 
                             if (subtractResult > this.processingTimeout  * 1000) {
                                 console.debug(`Moving ${messageIdAsStr} message id older than ${this.processingTimeout} seconds to the ${this.publishedIds} queue...`);
 
                                 const result = await this.repo.returnMessage(
-                                    messageResourceName, new Date().getTime(), this.processingIds,
+                                    messageResourceName, new Date().toISOString(), this.processingIds,
                                     this.publishedIds, messageIdAsStr);
 
                                 if (result) {

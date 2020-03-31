@@ -2,11 +2,11 @@ import { RedisOptions } from "ioredis";
 
 export interface Message {
     id: number,
-    createdDt: number,
-    receivedDt?: number,
+    createdDt: string,
+    receivedDt?: string,
     payload: string,
     receiveCount: number,
-    updatedDt: number
+    updatedDt: string
 }
 
 export interface IAppConfiguration extends RedisOptions {
@@ -37,12 +37,12 @@ export interface Repository {
     /**
      * Returns message to the processing queue.
      * @param {string} messageFullName - The message full name (e.g. createUser:message:2)
-     * @param {number} receivedDt - The received date as the number of milliseconds since the Unix Epoch.
+     * @param {string} receivedDt - The received date as the number of milliseconds since the Unix Epoch.
      * @param {string} moveFrom - The queue name to move a message from (e.g. createUser:processingIds).
      * @param {string} moveTo - The queue name to move a message to (e.g. createUser:publishedIds).
      * @param {string} messageId - The message id (e.g. 2).
      */
-    returnMessage(messageFullName: string, receivedDt: number,
+    returnMessage(messageFullName: string, receivedDt: string,
         moveFrom: string, moveTo: string, messageId: string): Promise<boolean>
 
     /**
