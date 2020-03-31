@@ -1,7 +1,7 @@
 {
-  "name": "reliable-queue-redis",
-  "version": "0.0.1",
-  "description": "Redis' reliable queue pattern implementation",
+  "name": "durable-message-queue",
+  "version": "0.1.0",
+  "description": "A durable message queue library powered by the Redis' reliable queue pattern and LUA scripts",
   "main": "index.js",
   "dependencies": {
     "ioredis": "4.16.0"
