@@ -1,0 +1,10 @@
+{
+    "cSpell.words": [
+        "hget",
+        "hset",
+        "lpush",
+        "lrange",
+        "lrem",
+        "nameof"
+    ]
+}
