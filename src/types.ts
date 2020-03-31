@@ -9,6 +9,13 @@ export interface Message {
     updatedDt: string
 }
 
+export interface Statistics {
+    numberOfMessagesSent: number,
+    numberOfMessagesReceived: number,
+    numberOfMessagesDeleted: number
+    numberOfMessagesReturned: number
+}
+
 export interface IAppConfiguration extends RedisOptions {
     /**
      * @param {number} visibilityTimeout - A period of time in seconds during which the library prevents other consumers from receiving and processing the message. 
@@ -23,9 +30,10 @@ export interface Repository {
      * Adds a message to the queue.
      * @param {string} messageFullName - The message full name (e.g. createUser:message:2)
      * @param {string} addTo - The queue name to add message to (e.g. createUser:publishedIds).
+     * @param {string} statisticsQueue - The queue name to add statistics (e.g. createUser:statistics).
      * @param {Message} message - The message to be add.
      */
-    addMessage(messageFullName: string, addTo:string, message: Message): Promise<Array<[Error | null, any]>>
+    addMessage(messageFullName: string, addTo:string, statisticsQueue: string, message: Message): Promise<Array<[Error | null, any]>>
 
     /**
      * Sends a message to the notification channel.
@@ -49,9 +57,10 @@ export interface Repository {
      * Gets a message from the published queue to process.
      * @param {string} moveFrom - The queue name to move a message from (e.g. createUser:processingIds).
      * @param {string} moveTo - The queue name to move a message to (e.g. createUser:publishedIds).
+     * @param {string} statisticsQueue - The queue name to add statistics (e.g. createUser:statistics).
      * @param {string} messageResourceNamePrefix - The prefix for the Redis key that stores
      * all message keys ('payload' key, 'createdDt' key, 'receivedDt' key, etc) without a message id.
      * E.g. 'createUser:message:'
      */
-    getMessage(moveFrom: string, moveTo:string, messageQueuePrefix:string): Promise<Message>
+    getMessage(moveFrom: string, moveTo:string, statisticsQueue: string, messageQueuePrefix:string): Promise<Message>
 }

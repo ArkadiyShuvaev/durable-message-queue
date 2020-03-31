@@ -9,6 +9,7 @@ export default class BaseService {
     protected publishedIds: string;
     protected processingIds: string;
     protected notifications: string;
+    protected statistics: string;
 
     /**
      *
@@ -16,11 +17,12 @@ export default class BaseService {
     constructor(queueName: string, redis: Redis) {
         this.redis = redis;
         this.queueName = queueName;
-        this.messageUniqId = `${queueName}:messageUniqId`;
-        this.messageQueue = `${queueName}:message`;
-        this.publishedIds = `${queueName}:publishedIds`;
-        this.processingIds = `${queueName}:processingIds`;
-        this.notifications = `${queueName}:notifications`;
+        this.messageUniqId = `dmq:${queueName}:messageUniqId`;
+        this.messageQueue = `dmq:${queueName}:message`;
+        this.publishedIds = `dmq:${queueName}:publishedIds`;
+        this.processingIds = `dmq:${queueName}:processingIds`;
+        this.notifications = `dmq:${queueName}:notifications`;
+        this.statistics = `dmq:${queueName}:statistics`;
     }
 
     protected getMessageResourceName(messageId: number): string {

@@ -1,5 +1,6 @@
-local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix,
-    receiveCountFieldName, receivedDtFieldName, updatedDtFieldName, receivedDt, updatedDt)
+local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix, statisticsQueue,
+    numberOfMessagesReceivedFieldName, receiveCountFieldName, receivedDtFieldName,
+    updatedDtFieldName, receivedDt, updatedDt)
 
     if (moveFrom == nil or moveTo == nil or messageResourceNamePrefix == nil
         or receiveCountFieldName == nil or receivedDtFieldName == nil or updatedDtFieldName == nil
@@ -36,6 +37,9 @@ local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix,
         --hset("queueName:message:1", "updatedDt", "1584480486476")
         redis.call("hset", messageResourceName, updatedDtFieldName, updatedDt)
 
+        --hincrby("queueName:statisticsQueue", "numberOfMessagesSent", 1)
+        redis.call("hincrby", statisticsQueue, numberOfMessagesReceivedFieldName, 1)
+
         --hgetall(dataKey)
         result = redis.call("hgetall", messageResourceName)
     end
@@ -43,4 +47,4 @@ local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix,
     return result
 end
 
-return (getMessageFromQueue(KEYS[1], KEYS[2], KEYS[3], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5]))
+return (getMessageFromQueue(KEYS[1], KEYS[2], KEYS[3], KEYS[4], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6]))

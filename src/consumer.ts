@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
-import { Message } from "./types";
+import { Message, Statistics } from "./types";
 import { nameof } from "./utils";
 import RedisRepository from "./redisRepository";
 
@@ -40,15 +40,15 @@ export default class Consumer extends BaseService {
         });
 
         console.debug(`Checking messages in the ${this.publishedIds} queue...`);
-        let message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
+        let message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.statistics, this.getMessageResourceNamePrexix());
         while (message) {
             await this.processJob(message, callback);
-            message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
+            message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.statistics, this.getMessageResourceNamePrexix());
         }
     }
 
     private async processItemsInQueue(callback: fArgVoid) {
-        const message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.getMessageResourceNamePrexix());
+        const message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.statistics, this.getMessageResourceNamePrexix());
         if (message) {
             await this.processJob(message, callback);
         }
@@ -67,6 +67,7 @@ export default class Consumer extends BaseService {
                     .multi()
                     .del(messageResourceName)
                     .lrem(this.processingIds, 0, message.id)
+                    .hincrby(this.statistics, nameof<Statistics>("numberOfMessagesDeleted"), 1)
                     .exec();
 
 

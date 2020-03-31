@@ -33,7 +33,7 @@ export default class Producer extends BaseService {
                     receiveCount: 0
                 };
 
-                await this.repo.addMessage(messageResourceName, this.publishedIds, message);
+                await this.repo.addMessage(messageResourceName, this.publishedIds, this.statistics, message);
 
                 console.debug(`The producer sent a message ${messageId} to the ${this.publishedIds} queue.`);
                 await this.repo.sendNotification(this.notifications, messageId);

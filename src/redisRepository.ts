@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import { Redis } from "ioredis";
-import {Repository, Message} from "./types";
+import {Repository, Message, Statistics} from "./types";
 import { nameof } from "./utils";
 
 export default class RedisRepository implements Repository {
@@ -15,16 +15,17 @@ export default class RedisRepository implements Repository {
         this.redis = redis;
     }
 
-    async getMessage(moveFrom: string, moveTo: string, messageResourceNamePrefix: string): Promise<Message> {
+    async getMessage(moveFrom: string, moveTo: string, statisticsQueue: string, messageResourceNamePrefix: string): Promise<Message> {
         return new Promise(async (res, rej) => {
             try {
 
                 let result: object | undefined = undefined;
 
                 const luaScript = await this.getMessageFromQueueLuaScript();
-                const now = new Date().getTime();
-                const array = await this.redis.eval(luaScript, 3,
-                    moveFrom, moveTo, messageResourceNamePrefix,
+                const now = new Date().toISOString();
+                const array = await this.redis.eval(luaScript, 4,
+                    moveFrom, moveTo, messageResourceNamePrefix, statisticsQueue,
+                    nameof<Statistics>("numberOfMessagesReceived"),
                     nameof<Message>("receiveCount"), nameof<Message>("receivedDt"),
                     nameof<Message>("updatedDt"), now, now);
 
@@ -66,7 +67,7 @@ export default class RedisRepository implements Repository {
         return await this.redis.publish(notificationQueue, messageId.toString());
     }
 
-    async addMessage(messageFullName: string, addTo:string, message: Message): Promise<Array<[Error | null, any]>> {
+    async addMessage(messageFullName: string, addTo:string, statisticsQueue: string, message: Message): Promise<Array<[Error | null, any]>> {
         return await this.redis
             .multi()
             .hset(messageFullName, nameof<Message>("id"), message.id)
@@ -75,6 +76,7 @@ export default class RedisRepository implements Repository {
             .hset(messageFullName, nameof<Message>("updatedDt"), message.updatedDt)
             .hset(messageFullName, nameof<Message>("receiveCount"), message.receiveCount)
             .lpush(addTo, message.id)
+            .hincrby(statisticsQueue, nameof<Statistics>("numberOfMessagesSent"), 1)
             .exec();
     }
 
