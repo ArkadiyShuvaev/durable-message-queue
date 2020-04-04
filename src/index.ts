@@ -1,8 +1,4 @@
-import Redis from "ioredis";
-import Producer from "./src/producer";
-import Consumer from "./src/consumer";
-import QueueManager from "./src/queueManager";
-import Builder from "./src/builder";
+import Builder from "./builder";
 
 const queueName = "test";
 

@@ -8,7 +8,8 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\dist\\index.js",
+            "program": "${workspaceFolder}\\lib\\index.js",
+            "preLaunchTask": "full build",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
