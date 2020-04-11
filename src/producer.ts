@@ -22,7 +22,7 @@ export default class Producer extends BaseService {
         return new Promise<ActionResult>(async (res, rej) => {
             try {
                 const messageId = await this.redis.incr(this.messageUniqId);
-                const messageResourceName = this.getMessageResourceName(messageId);
+                const messageResourceName = this.getMessageKey(messageId);
 
                 const now = new Date().toISOString();
                 const message: Message = {
@@ -33,10 +33,10 @@ export default class Producer extends BaseService {
                     receiveCount: 0
                 };
 
-                await this.repo.addMessage(messageResourceName, this.publishedIds, this.statistics, message);
+                await this.repo.addMessage(messageResourceName, this.publishedQueue, this.metricsQueue, message);
 
-                console.debug(`The producer sent a message ${messageId} to the ${this.publishedIds} queue.`);
-                await this.repo.sendNotification(this.notifications, messageId);
+                console.debug(`The producer sent a message ${messageId} to the ${this.publishedQueue} queue.`);
+                await this.repo.sendNotification(this.notificationQueue, messageId);
 
                 res({
                     isSuccess: true,

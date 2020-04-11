@@ -28,27 +28,27 @@ export default class Consumer extends BaseService {
 
     /**
      * Starts consuming published messages.
-     * @param {fArgVoid} callback - The function that recieves serialized messages.
-     * Should return void to identify a message as successfuly processed.
+     * @param {fArgVoid} callback - The function that receives serialized messages.
+     * Should return void to identify a message as successfully processed.
      * Should throw error to notify the queue manager to re-handle the message.
      */
     async subscribe(callback: fArgVoid) {
-        await this.redisInSubscribedState.subscribe(this.notifications);
-        console.debug(`The consumer has succesfully subscribed to new messages in the ${this.publishedIds} queue.`);
+        await this.redisInSubscribedState.subscribe(this.notificationQueue);
+        console.debug(`The consumer has successfully subscribed to new messages in the ${this.publishedQueue} queue.`);
         this.redisInSubscribedState.on("message", async () => {
             await this.processItemsInQueue(callback);
         });
 
-        console.debug(`Checking messages in the ${this.publishedIds} queue...`);
-        let message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.statistics, this.getMessageResourceNamePrexix());
+        console.debug(`Checking messages in the ${this.publishedQueue} queue...`);
+        let message = await this.repo.getMessage(this.publishedQueue, this.processingQueue, this.metricsQueue, this.getMessageResourceNamePrefix());
         while (message) {
             await this.processJob(message, callback);
-            message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.statistics, this.getMessageResourceNamePrexix());
+            message = await this.repo.getMessage(this.publishedQueue, this.processingQueue, this.metricsQueue, this.getMessageResourceNamePrefix());
         }
     }
 
     private async processItemsInQueue(callback: fArgVoid) {
-        const message = await this.repo.getMessage(this.publishedIds, this.processingIds, this.statistics, this.getMessageResourceNamePrexix());
+        const message = await this.repo.getMessage(this.publishedQueue, this.processingQueue, this.metricsQueue, this.getMessageResourceNamePrefix());
         if (message) {
             await this.processJob(message, callback);
         }
@@ -61,13 +61,13 @@ export default class Consumer extends BaseService {
 
             callback(message);
 
-            const messageResourceName = this.getMessageResourceName(message.id);
+            const messageResourceName = this.getMessageKey(message.id);
 
             await this.redis
                     .multi()
                     .del(messageResourceName)
-                    .lrem(this.processingIds, 0, message.id)
-                    .hincrby(this.statistics, nameof<Statistics>("numberOfMessagesDeleted"), 1)
+                    .lrem(this.processingQueue, 0, message.id)
+                    .hincrby(this.metricsQueue, nameof<Statistics>("numberOfMessagesDeleted"), 1)
                     .exec();
 
 

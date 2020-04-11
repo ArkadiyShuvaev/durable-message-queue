@@ -1,21 +1,24 @@
 import BaseService from "./baseService";
 import { Redis } from "ioredis";
-import { Message, IAppConfiguration, Repository } from "./types";
-import { nameof } from "./utils";
+import { IAppConfiguration, Repository, MessageMetadata } from "./types";
 
 export default class QueueManager extends BaseService {
     repo: Repository;
-    private processingTimeout: number;
+    private processingTimeoutSeconds: number;
+    maxReceiveCount: number;
 
     constructor(queueName: string, redis: Redis, repo: Repository, config?: IAppConfiguration) {
         super(queueName, redis);
 
-        if (typeof config === "undefined" || typeof config.processingTimeout === "undefined") {
-            throw Error(`${nameof<IAppConfiguration>("processingTimeout")}`);
+        if (typeof config === "undefined"
+            || typeof config.processingTimeout === "undefined"
+            || typeof config.maxReceiveCount === "undefined") {
+            throw new Error("Configuration");
         }
 
         this.repo = repo;
-        this.processingTimeout = config.processingTimeout;
+        this.processingTimeoutSeconds = config.processingTimeout;
+        this.maxReceiveCount = config.maxReceiveCount;
     }
 
     start(): void {
@@ -24,42 +27,58 @@ export default class QueueManager extends BaseService {
                 try {
                     console.debug(`Processing the "${this.queueName}" queue...`);
 
-                    var messageIds = await this.redis.lrange(this.processingIds, 0, -1);
+                    var messageIds = await this.redis.lrange(this.processingQueue, 0, -1);
 
                     messageIds.forEach(async messageIdAsStr => {
-                        const messageId = parseInt(messageIdAsStr);
-                        const messageResourceName = this.getMessageResourceName(messageId);
-                        const dateTimeAsStr = await this.redis.hget(messageResourceName, nameof<Message>("receivedDt"))
+                        const messageKey = this.getMessageKey(parseInt(messageIdAsStr));
+                        const messageMetadata = await this.repo.getMessageMetadata(messageKey);
+                        const dateTimeAsStr = messageMetadata.receivedDt;
 
                         if (typeof dateTimeAsStr === "string") {
-                            const unixEpochMillisec = new Date(dateTimeAsStr).getTime();
-                            const subtractResult = new Date().getTime() - unixEpochMillisec;
+                            const unixEpochMilliseconds = new Date(dateTimeAsStr).getTime();
+                            const subtractResult = new Date().getTime() - unixEpochMilliseconds;
 
-                            if (subtractResult > this.processingTimeout  * 1000) {
-                                console.debug(`Moving ${messageIdAsStr} message id older than ${this.processingTimeout} seconds to the ${this.publishedIds} queue...`);
-
-                                const result = await this.repo.returnMessage(
-                                    messageResourceName, new Date().toISOString(), this.processingIds,
-                                    this.publishedIds, messageIdAsStr);
-
-                                if (result) {
-                                    const msg = `The ${messageIdAsStr} message id has successfully been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`;
-                                    console.debug(msg);
-                                    this.repo.sendNotification(this.notifications, messageId);
+                            if (subtractResult > this.processingTimeoutSeconds  * 1000) {
+                                if (messageMetadata.receiveCount === 0 || messageMetadata.receiveCount < this.maxReceiveCount) {
+                                    await this.moveToPublishedQueue(messageKey, messageMetadata);
                                 } else {
-                                    console.debug(`The ${messageIdAsStr} message id could not been moved from the ${this.processingIds} to the ${this.publishedIds} queue.`);
+                                    await this.MoveToDeadQueue(messageKey, messageMetadata);
                                 }
-
                             }
-
                         }
-
                     });
+
+                    res();
                 } catch(e) {
                     rej(e);
                 }
 
             });
-        }, 10000);
+        }, this.processingTimeoutSeconds * 900); // at 10% less than the processingTimeout value
+    }
+
+    private async moveToPublishedQueue(messageKey: string, messageMetadata: MessageMetadata) {
+        console.debug(`Moving the "${messageKey}' message back to the ${this.publishedQueue} queue...`);
+        const result = await this.repo.moveToPublishedQueue(messageKey, this.processingQueue, this.publishedQueue, this.metricsQueue, new Date().toISOString(), messageMetadata.id);
+        if (result) {
+            const msg = `The "${messageKey}' message has successfully been moved from the ${this.processingQueue} to the ${this.publishedQueue} queue.`;
+            console.debug(msg);
+            this.repo.sendNotification(this.notificationQueue, messageMetadata.id);
+        }
+        else {
+            throw new Error(`The "${messageKey}' message could not been moved from the ${this.processingQueue} to the ${this.publishedQueue} queue.`);
+        }
+    }
+
+    private async MoveToDeadQueue(messageKey: string, messageMetadata: MessageMetadata) {
+        console.debug(`Moving the "${messageKey}' message to the "${this.deadQueue}" dead queue...`);
+        const result = await this.repo.moveToDeadQueue(messageKey, this.getDeadMessageKey(messageMetadata.id), this.processingQueue, this.metricsQueue, new Date().toISOString(), messageMetadata.id);
+        if (result) {
+            const msg = `The "${messageKey}' message has successfully been moved to the ${this.deadQueue} queue.`;
+            console.debug(msg);
+        }
+        else {
+            throw new Error(`The "${messageKey}' message could not been moved to the ${this.deadQueue} dead queue.`);
+        }
     }
 }

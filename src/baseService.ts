@@ -6,10 +6,11 @@ export default class BaseService {
     protected messageUniqId: string;
     protected queueName: string;
     private messageQueue: string;
-    protected publishedIds: string;
-    protected processingIds: string;
-    protected notifications: string;
-    protected statistics: string;
+    protected publishedQueue: string;
+    protected processingQueue: string;
+    protected notificationQueue: string;
+    protected metricsQueue: string;
+    protected deadQueue: string;
 
     /**
      *
@@ -19,17 +20,34 @@ export default class BaseService {
         this.queueName = queueName;
         this.messageUniqId = `dmq:${queueName}:messageUniqId`;
         this.messageQueue = `dmq:${queueName}:message`;
-        this.publishedIds = `dmq:${queueName}:publishedIds`;
-        this.processingIds = `dmq:${queueName}:processingIds`;
-        this.notifications = `dmq:${queueName}:notifications`;
-        this.statistics = `dmq:${queueName}:statistics`;
+        this.publishedQueue = `dmq:${queueName}:published`;
+        this.processingQueue = `dmq:${queueName}:processing`;
+        this.notificationQueue = `dmq:${queueName}:notification`;
+        this.metricsQueue = `dmq:${queueName}:metrics`;
+        this.deadQueue = `dmq:${queueName}:deadMessage`;
     }
 
-    protected getMessageResourceName(messageId: number): string {
-        return `${this.getMessageResourceNamePrexix()}${messageId}`;
+    /**
+     * Returns message key. E.g. "createUser:message:2".
+     * @param {number} messageId - The messageId. E.g. 2.
+     */
+    protected getMessageKey(messageId: number): string {
+        return `${this.getMessageResourceNamePrefix()}${messageId}`;
     }
 
-    protected getMessageResourceNamePrexix(): string {
+    /**
+     * Returns dead message key. E.g. "createUser:deadMessage:2".
+     * @param {number} messageId - The messageId. E.g. 2.
+     */
+    protected getDeadMessageKey(messageId: number): string {
+        return `${this.deadQueue}:${messageId}`;
+    }
+
+    /**
+     * Returns prefix message key. E.g. "createUser:message:".
+     * @param {number} messageId - The messageId. E.g. 2.
+     */
+    protected getMessageResourceNamePrefix(): string {
         return `${this.messageQueue}:`;
     }
 }

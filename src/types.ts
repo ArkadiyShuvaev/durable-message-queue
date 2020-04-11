@@ -1,12 +1,15 @@
 import { RedisOptions } from "ioredis";
 
-export interface Message {
+export interface MessageMetadata {
     id: number,
     createdDt: string,
     receivedDt?: string,
-    payload: string,
     receiveCount: number,
     updatedDt: string
+}
+
+export interface Message extends MessageMetadata {
+    payload: string
 }
 
 export interface Statistics {
@@ -14,14 +17,20 @@ export interface Statistics {
     numberOfMessagesReceived: number,
     numberOfMessagesDeleted: number
     numberOfMessagesReturned: number
+    numberOfMessagesDead: number
 }
 
 export interface IAppConfiguration extends RedisOptions {
     /**
-     * @param {number} visibilityTimeout - A period of time in seconds during which the library prevents other consumers from receiving and processing the message. 
+     * @param {number} visibilityTimeout - A period of time in seconds during which the library prevents other consumers from receiving and processing the message.
      * The default visibility timeout for a message is 300 seconds (5 minutes).
      */
      processingTimeout?: number
+
+     /**
+      * @param {number} maxReceiveCount - When the Message.receiveCount for a message exceeds maxReceiveCount the for a queue, the queue manager moves the message to a dead-letter queue (default value is 3).
+      */
+     maxReceiveCount?: number
 }
 
 export interface Repository {
@@ -29,11 +38,11 @@ export interface Repository {
     /**
      * Adds a message to the queue.
      * @param {string} messageFullName - The message full name (e.g. createUser:message:2)
-     * @param {string} addTo - The queue name to add message to (e.g. createUser:publishedIds).
-     * @param {string} statisticsQueue - The queue name to add statistics (e.g. createUser:statistics).
+     * @param {string} addTo - The queue name to add message to (e.g. createUser:published).
+     * @param {string} metricsQueue - The queue name to add metrics (e.g. createUser:metrics).
      * @param {Message} message - The message to be add.
      */
-    addMessage(messageFullName: string, addTo:string, statisticsQueue: string, message: Message): Promise<Array<[Error | null, any]>>
+    addMessage(messageFullName: string, addTo:string, metricsQueue: string, message: Message): Promise<Array<[Error | null, any]>>
 
     /**
      * Sends a message to the notification channel.
@@ -43,24 +52,44 @@ export interface Repository {
     sendNotification(notificationQueue: string, messageId: number): Promise<number>;
 
     /**
-     * Returns message to the processing queue.
+     * Moves message from the processing to the published queue.
      * @param {string} messageFullName - The message full name (e.g. createUser:message:2)
+     * @param {string} moveFrom - The queue name to move a message from (e.g. createUser:processing).
+     * @param {string} moveTo - The queue name to move a message to (e.g. createUser:published).
+     * @param {string} metricsQueue - The queue name to add metrics (e.g. createUser:metrics).
      * @param {string} receivedDt - The received date as the number of milliseconds since the Unix Epoch.
-     * @param {string} moveFrom - The queue name to move a message from (e.g. createUser:processingIds).
-     * @param {string} moveTo - The queue name to move a message to (e.g. createUser:publishedIds).
-     * @param {string} messageId - The message id (e.g. 2).
+     * @param {number} messageId - The message id (e.g. 2).
      */
-    returnMessage(messageFullName: string, receivedDt: string,
-        moveFrom: string, moveTo: string, messageId: string): Promise<boolean>
+    moveToPublishedQueue(messageFullName: string, moveFrom: string, moveTo: string, metricsQueue: string,
+        updatedDt: string, messageId: number): Promise<boolean>
+
+    /**
+     * Moves message to the dead queue.
+     * @param {string} messageKey - The message key (e.g. createUser:message:2)
+     * @param {string} deadMessageKey - The dead message key (e.g. createUser:deadMessage:2).
+     * @param {string} processingQueue - The processing queue name where the message is removed from (e.g. createUser:processing).
+     *                                      The message becomes unavailable for processing.
+     * @param {string} metricsQueue - The queue name to add metrics (e.g. createUser:metrics).
+     * @param {string} updatedDt - The received date as the number of milliseconds since the Unix Epoch.
+     * @param {number} messageId - The message id (e.g. 2).
+     */
+    moveToDeadQueue(messageKey: string, deadMessageKey: string, processingQueue: string, metricsQueue: string,
+        updatedDt: string, messageId: number): Promise<boolean>
 
     /**
      * Gets a message from the published queue to process.
-     * @param {string} moveFrom - The queue name to move a message from (e.g. createUser:processingIds).
-     * @param {string} moveTo - The queue name to move a message to (e.g. createUser:publishedIds).
-     * @param {string} statisticsQueue - The queue name to add statistics (e.g. createUser:statistics).
+     * @param {string} moveFrom - The queue name to move a message from (e.g. createUser:processing).
+     * @param {string} moveTo - The queue name to move a message to (e.g. createUser:published).
+     * @param {string} metricsQueue - The queue name to add metrics (e.g. createUser:metrics).
      * @param {string} messageResourceNamePrefix - The prefix for the Redis key that stores
      * all message keys ('payload' key, 'createdDt' key, 'receivedDt' key, etc) without a message id.
      * E.g. 'createUser:message:'
      */
-    getMessage(moveFrom: string, moveTo:string, statisticsQueue: string, messageQueuePrefix:string): Promise<Message>
+    getMessage(moveFrom: string, moveTo:string, metricsQueue: string, messageQueuePrefix:string): Promise<Message>
+
+    /**
+     * Returns message metadata for a given reference.
+     * @param {string} messageFullName - The message full name (e.g. createUser:message:2).
+     */
+    getMessageMetadata(messageFullName: string): Promise<MessageMetadata>
 }

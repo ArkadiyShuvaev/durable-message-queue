@@ -42,6 +42,10 @@ export default class Builder {
             config.processingTimeout = 300;
         }
 
+        if (typeof config.maxReceiveCount === "undefined") {
+            config.maxReceiveCount = 3;
+        }
+
         return config;
     }
 }

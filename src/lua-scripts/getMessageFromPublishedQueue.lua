@@ -1,17 +1,17 @@
-local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix, statisticsQueue,
+local function getMessageFromPublishedQueue(moveFrom, moveTo, messageResourceNamePrefix, metricsQueue,
     numberOfMessagesReceivedFieldName, receiveCountFieldName, receivedDtFieldName,
     updatedDtFieldName, receivedDt, updatedDt)
 
-    if (moveFrom == nil or moveTo == nil or messageResourceNamePrefix == nil
+    if (moveFrom == nil or moveTo == nil or messageResourceNamePrefix == nil or metricsQueue == nil
         or receiveCountFieldName == nil or receivedDtFieldName == nil or updatedDtFieldName == nil
         or receivedDt == nil or updatedDt == nil) then
-        error("argument cannot be nil: " .. moveFrom .. moveTo .. messageResourceNamePrefix
+        error("argument cannot be nil: " .. moveFrom .. moveTo .. messageResourceNamePrefix .. metricsQueue
             .. receiveCountFieldName .. receivedDtFieldName .. updatedDtFieldName
             .. receivedDt .. updatedDt)
     end
 
     local result = nil
-    --rpoplpush("queueName:publishedIds", "queueName:processingIds");
+    --rpoplpush("queueName:published", "queueName:processing");
     local messageId = redis.call("rpoplpush", moveFrom, moveTo)
 
     if (messageId == nil or (type(messageId) == "boolean" and not messageId)) then
@@ -37,8 +37,8 @@ local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix, 
         --hset("queueName:message:1", "updatedDt", "1584480486476")
         redis.call("hset", messageResourceName, updatedDtFieldName, updatedDt)
 
-        --hincrby("queueName:statisticsQueue", "numberOfMessagesSent", 1)
-        redis.call("hincrby", statisticsQueue, numberOfMessagesReceivedFieldName, 1)
+        --hincrby("queueName:metricsQueue", "numberOfMessagesReceived", 1)
+        redis.call("hincrby", metricsQueue, numberOfMessagesReceivedFieldName, 1)
 
         --hgetall(dataKey)
         result = redis.call("hgetall", messageResourceName)
@@ -47,4 +47,4 @@ local function getMessageFromQueue(moveFrom, moveTo, messageResourceNamePrefix, 
     return result
 end
 
-return (getMessageFromQueue(KEYS[1], KEYS[2], KEYS[3], KEYS[4], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6]))
+return (getMessageFromPublishedQueue(KEYS[1], KEYS[2], KEYS[3], KEYS[4], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6]))
