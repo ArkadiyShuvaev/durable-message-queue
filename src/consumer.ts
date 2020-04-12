@@ -4,7 +4,7 @@ import { Message, Statistics } from "./types";
 import { nameof } from "./utils";
 import RedisRepository from "./redisRepository";
 
-export declare type fArgVoid = (object: Message) => void;
+export declare type fArgVoidAsync = (object: Message) => Promise<void>;
 
 export default class Consumer extends BaseService {
 
@@ -28,11 +28,11 @@ export default class Consumer extends BaseService {
 
     /**
      * Starts consuming published messages.
-     * @param {fArgVoid} callback - The function that receives serialized messages.
+     * @param {fArgVoidAsync} callback - The function that receives a serialized message.
      * Should return void to identify a message as successfully processed.
      * Should throw error to notify the queue manager to re-handle the message.
      */
-    async subscribe(callback: fArgVoid) {
+    async subscribe(callback: fArgVoidAsync) {
         await this.redisInSubscribedState.subscribe(this.notificationQueue);
         console.debug(`The consumer has successfully subscribed to new messages in the ${this.publishedQueue} queue.`);
         this.redisInSubscribedState.on("message", async () => {
@@ -47,19 +47,19 @@ export default class Consumer extends BaseService {
         }
     }
 
-    private async processItemsInQueue(callback: fArgVoid) {
+    private async processItemsInQueue(callback: fArgVoidAsync) {
         const message = await this.repo.getMessage(this.publishedQueue, this.processingQueue, this.metricsQueue, this.getMessageResourceNamePrefix());
         if (message) {
             await this.processJob(message, callback);
         }
     }
 
-    private async processJob(message: Message, callback: fArgVoid) {
+    private async processJob(message: Message, callback: fArgVoidAsync) {
 
         try {
             console.debug(`Start processing the ${message.id} message id.`);
 
-            callback(message);
+            await callback(message);
 
             const messageResourceName = this.getMessageKey(message.id);
 
