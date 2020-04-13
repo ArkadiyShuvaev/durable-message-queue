@@ -28,9 +28,9 @@ If a message cannot be processed x times by a consumer, the message is moved to 
 
 ![Dead-letter queue](https://github.com/ArkadiyShuvaev/durable-message-queue/blob/master/assests/dead-letter-queue.png)
 ### Metrics
-The library support a set of monitoring metrics that indicate the number of:
-1. Messages are sent by producers for processing
-2. Messages are started processing by consumers
-3. Corrupted messages are moved to the dead-letter queue by a queue manager
-4. Unprocessed messages are moved back to the queue because of crashing a consumer
-5. Messages are successfully processed and removed from the queue
+The library supports a set of monitoring metrics that indicate the number of:
+1. "numberOfMessagesSent" - messages are sent by producers for processing
+2. "numberOfMessagesReceived" - messages are received and started processing by consumers
+3. "numberOfMessagesDead" - corrupted messages are moved to the dead-letter queue by a queue manager
+4. "numberOfMessagesReturned" - unprocessed messages are moved back to the queue because of crashing a consumer or for any undefined reason
+5. "numberOfMessagesDeleted" - messages are successfully processed and removed from the queue.
