@@ -18,7 +18,7 @@ The library supports following features (described below in details):
 ...
 ## How it works
 ### The processing timeout
-When a message is added to the queue by a producer it gets available for the processing by consumers. One of them starts processing the message and the message is become unavailable for other consumers:
+When a message is added to the queue by a producer it gets available for processing by consumers. One of them starts processing the message and the message is become unavailable for other consumers:
 
 ![Processing Timeout](https://github.com/ArkadiyShuvaev/durable-message-queue/blob/master/assests/processing-timeout.png)
 
@@ -28,7 +28,7 @@ If a message cannot be processed x times by a consumer, the message is moved to 
 
 ![Dead-letter queue](https://github.com/ArkadiyShuvaev/durable-message-queue/blob/master/assests/dead-letter-queue.png)
 ### Metrics
-The library supports a set of monitoring metrics that indicate the number of:
+The library supports a set of monitoring metrics that indicates the number of:
 1. "numberOfMessagesSent" - messages are sent by producers for processing
 2. "numberOfMessagesReceived" - messages are received and started processing by consumers
 3. "numberOfMessagesDead" - corrupted messages are moved to the dead-letter queue by a queue manager
