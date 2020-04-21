@@ -1,15 +1,15 @@
-import Builder from "./src/builder";
+const dmq = require("../dist");
 
 const queueName = "createUser";
 
-const queueManager = Builder.createQueueManager(queueName, {
+const queueManager = dmq.Builder.createQueueManager(queueName, {
     processingTimeout: 10,
     maxReceiveCount: 6
 });
 queueManager.start();
 
-const producer = Builder.createProducer(queueName);
-const consumer = Builder.createConsumer(queueName);
+const producer = dmq.Builder.createProducer(queueName);
+const consumer = dmq.Builder.createConsumer(queueName);
 
 consumer.subscribe(async (message) => {
     if (message.id % 1 == 0) {

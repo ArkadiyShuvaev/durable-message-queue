@@ -1,17 +1,11 @@
-import { promises as fs } from "fs";
 import { Redis } from "ioredis";
 import {Repository, Message, Statistics, MessageMetadata} from "./types";
 import { nameof } from "./utils";
+import LuaScripts from "./luaScripts";
 
 export default class RedisRepository implements Repository {
 
     private redis: Redis;
-    private moveMessageToDeadQueueLuaScript: string | undefined;
-    private moveMessageToPublishedQueueLuaScript: string | undefined;
-    private getMessageFromPublishedQueueLuaScript: string | undefined;
-    private readonly moveMessageToDeadQueueFileName = "src/lua-scripts/moveMessageToDeadQueue.lua";
-    private readonly moveMessageToPublishedQueueFileName = "src/lua-scripts/moveMessageToPublishedQueue.lua";
-    private readonly getMessageFromPublishedQueueFileName = "src/lua-scripts/getMessageFromPublishedQueue.lua";
 
     constructor(redis: Redis) {
         this.redis = redis;
@@ -23,7 +17,7 @@ export default class RedisRepository implements Repository {
 
                 let result: object | undefined = undefined;
 
-                const luaScript = await this.getMessageFromQueueScript();
+                const luaScript = await LuaScripts.getMessageFromPublishedQueue();
                 const now = new Date().toISOString();
                 const array = await this.redis.eval(luaScript, 4,
                     moveFrom, moveTo, messageResourceNamePrefix, metricsQueue,
@@ -84,7 +78,7 @@ export default class RedisRepository implements Repository {
             metricsQueue: string, updatedDt: string, messageId: number): Promise<boolean> {
         return new Promise(async (res, rej) => {
             try {
-                const luaScript = await this.getMoveMessageToPublishedQueueScript();
+                const luaScript = await LuaScripts.getMoveMessageToPublishedQueue();
                 const result:boolean = await this.redis.eval(luaScript, 4,
                     messageFullName, moveFrom, moveTo, metricsQueue,
                     nameof<Statistics>("numberOfMessagesReturned"), nameof<Message>("receivedDt"),
@@ -102,7 +96,7 @@ export default class RedisRepository implements Repository {
             metricsQueue: string, updatedDt: string, messageId: number): Promise<boolean> {
         return new Promise(async (res, rej) => {
             try {
-                const luaScript = await this.getMoveMessageToDeadQueueScript();
+                const luaScript = await LuaScripts.getMoveMessageToDeadQueue();
                 const result:boolean = await this.redis.eval(luaScript, 4,
                     messageKey, deadMessageKey, processingQueue, metricsQueue,
                     nameof<Statistics>("numberOfMessagesDead"), nameof<Message>("updatedDt"),
@@ -131,51 +125,5 @@ export default class RedisRepository implements Repository {
             .lpush(addTo, message.id)
             .hincrby(metricsQueue, nameof<Statistics>("numberOfMessagesSent"), 1)
             .exec();
-    }
-
-    private async getMessageFromQueueScript(): Promise<string> {
-
-        return new Promise<string>(async (res, rej) => {
-            try {
-                if (!this.getMessageFromPublishedQueueLuaScript) {
-                    const data = await fs.readFile(this.getMessageFromPublishedQueueFileName); //  10.0.0 + is required
-                    this.getMessageFromPublishedQueueLuaScript = Buffer.from(data).toString("utf8");
-                }
-                return res(this.getMessageFromPublishedQueueLuaScript);
-
-            } catch(err) {
-                rej(err);
-            }
-        });
-    }
-
-    private async getMoveMessageToPublishedQueueScript(): Promise<string> {
-        return new Promise<string>(async (res, rej) => {
-            try {
-                if (!this.moveMessageToPublishedQueueLuaScript) {
-                    const data = await fs.readFile(this.moveMessageToPublishedQueueFileName); //  10.0.0 + is required
-                    this.moveMessageToPublishedQueueLuaScript = Buffer.from(data).toString("utf8");
-                }
-                return res(this.moveMessageToPublishedQueueLuaScript);
-
-            } catch(err) {
-                rej(err);
-            }
-        });
-    }
-
-    private async getMoveMessageToDeadQueueScript(): Promise<string> {
-        return new Promise<string>(async (res, rej) => {
-            try {
-                if (!this.moveMessageToDeadQueueLuaScript) {
-                    const data = await fs.readFile(this.moveMessageToDeadQueueFileName); //  10.0.0 + is required
-                    this.moveMessageToDeadQueueLuaScript = Buffer.from(data).toString("utf8");
-                }
-                return res(this.moveMessageToDeadQueueLuaScript);
-
-            } catch(err) {
-                rej(err);
-            }
-        });
     }
 }
