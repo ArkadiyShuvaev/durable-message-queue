@@ -4,6 +4,7 @@ import { IAppConfiguration } from "./types";
 import Producer from "./producer";
 import QueueManager from "./queueManager";
 import RedisRepository from "./redisRepository";
+import { Monitor } from ".";
 
 export default class Builder {
     /**
@@ -26,6 +27,11 @@ export default class Builder {
         config = this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
         return new QueueManager(queueName, redisClient, new RedisRepository(redisClient), config);
+    }
+
+    static createMonitor(queueName: string, config?: IAppConfiguration): Monitor {
+        const redisClient = new Redis(config);
+        return new Monitor(queueName, new RedisRepository(redisClient), redisClient, new Redis(config));
     }
 
     private static setDefaultAppValues(config?: IAppConfiguration) {

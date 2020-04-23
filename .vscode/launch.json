@@ -12,6 +12,15 @@
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
+        }, {
+            "type": "node",
+            "request": "launch",
+            "name": "Run Monitor",
+            "program": "${workspaceFolder}\\examples\\run-monitor.js",
+            "preLaunchTask": "build",
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
         }
     ]
 }
