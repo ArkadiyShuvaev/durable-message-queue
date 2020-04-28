@@ -1,5 +1,3 @@
-import { Redis } from "ioredis";
-
 export default class BaseService {
     protected messageUniqId: string;
     protected queueName: string;
