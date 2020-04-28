@@ -1,8 +1,6 @@
 import { Redis } from "ioredis";
 
 export default class BaseService {
-
-    protected redis: Redis;
     protected messageUniqId: string;
     protected queueName: string;
     private messageQueue: string;
@@ -12,11 +10,7 @@ export default class BaseService {
     protected metricsQueue: string;
     protected deadQueue: string;
 
-    /**
-     *
-     */
-    constructor(queueName: string, redis: Redis) {
-        this.redis = redis;
+    constructor(queueName: string) {
         this.queueName = queueName;
         this.messageUniqId = `dmq:${queueName}:messageUniqId`;
         this.messageQueue = `dmq:${queueName}:message`;
