@@ -6,10 +6,12 @@ import { nameof } from "./utils";
 
 
 export default class Producer extends BaseService {
-    repo: Repository;
+    private redis: Redis;
+    private repo: Repository;
 
     constructor(queueName: string, repo:Repository, redis: Redis) {
-        super(queueName, redis);
+        super(queueName);
+        this.redis = redis;
         this.repo = repo;
     }
 

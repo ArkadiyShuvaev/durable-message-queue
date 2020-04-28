@@ -8,22 +8,24 @@ export declare type fArgVoidAsync = (object: Message) => Promise<void>;
 
 export default class Consumer extends BaseService {
 
-    repo: RedisRepository;
-    redisInSubscribedState: Redis;
+    private redis: Redis;
+    private repo: RedisRepository;
+    private redisSubscribedClient: Redis;
 
     /**
      * Creates an instance of the consumer.
-     * Once the client enters the subscribed state it is not supposed to issue any other commands, 
+     * Once the client enters the subscribed state it is not supposed to issue any other commands,
      * and the second Redis client is required.
      * @param {Redis} redisClient - The Redis client to handle messages.
      * @param {RedisRepository} redisRepository - The Redis repository.
      * @param {Redis} redisSubscribedClient - The Redis client to subscribe to new published messages.
     */
     constructor(queueName: string, redisRepository: RedisRepository, redisClient: Redis, redisSubscribedClient: Redis) {
-        super(queueName, redisClient);
+        super(queueName);
 
+        this.redis = redisClient;
         this.repo = redisRepository;
-        this.redisInSubscribedState = redisSubscribedClient;
+        this.redisSubscribedClient = redisSubscribedClient;
     }
 
     /**
@@ -33,9 +35,9 @@ export default class Consumer extends BaseService {
      * Should throw error to notify the queue manager to re-handle the message.
      */
     async subscribe(callback: fArgVoidAsync) {
-        await this.redisInSubscribedState.subscribe(this.notificationQueue);
+        await this.redisSubscribedClient.subscribe(this.notificationQueue);
         console.debug(`The consumer has successfully subscribed to new messages in the ${this.publishedQueue} queue.`);
-        this.redisInSubscribedState.on("message", async () => {
+        this.redisSubscribedClient.on("message", async () => {
             await this.processItemsInQueue(callback);
         });
 

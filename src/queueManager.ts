@@ -3,12 +3,16 @@ import { Redis } from "ioredis";
 import { IAppConfiguration, Repository, MessageMetadata } from "./types";
 
 export default class QueueManager extends BaseService {
-    repo: Repository;
+
+    private redis: Redis;
+    private repo: Repository;
     private processingTimeoutSeconds: number;
-    maxReceiveCount: number;
+    private maxReceiveCount: number;
 
     constructor(queueName: string, redis: Redis, repo: Repository, config?: IAppConfiguration) {
-        super(queueName, redis);
+        super(queueName);
+
+        this.redis = redis;
 
         if (typeof config === "undefined"
             || typeof config.processingTimeout === "undefined"
