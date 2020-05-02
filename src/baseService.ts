@@ -7,6 +7,7 @@ export default class BaseService {
     protected notificationQueue: string;
     protected metricsQueue: string;
     protected deadQueue: string;
+    protected allQueues: string;
 
     constructor(queueName: string) {
         this.queueName = queueName;
@@ -17,6 +18,7 @@ export default class BaseService {
         this.notificationQueue = `dmq:${queueName}:notification`;
         this.metricsQueue = `dmq:${queueName}:metrics`;
         this.deadQueue = `dmq:${queueName}:deadMessage`;
+        this.allQueues = `dmq:allQueues`;
     }
 
     /**

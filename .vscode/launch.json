@@ -16,8 +16,9 @@
             "type": "node",
             "request": "launch",
             "name": "Run Monitor",
+            "console": "externalTerminal",
             "program": "${workspaceFolder}\\examples\\run-monitor.js",
-            "preLaunchTask": "build",
+            // "preLaunchTask": "build",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

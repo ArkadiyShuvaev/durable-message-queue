@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
-import { Message, Statistics } from "./types";
+import { Message, Metrics } from "./types";
 import { nameof } from "./utils";
 import RedisRepository from "./redisRepository";
 
@@ -69,7 +69,7 @@ export default class Consumer extends BaseService {
                     .multi()
                     .del(messageResourceName)
                     .lrem(this.processingQueue, 0, message.id)
-                    .hincrby(this.metricsQueue, nameof<Statistics>("numberOfMessagesDeleted"), 1)
+                    .hincrby(this.metricsQueue, nameof<Metrics>("numberOfMessagesDeleted"), 1)
                     .exec();
 
 

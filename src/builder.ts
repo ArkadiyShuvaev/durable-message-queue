@@ -1,10 +1,8 @@
-import Consumer from "./consumer"
 import Redis from "ioredis";
 import { IAppConfiguration } from "./types";
-import Producer from "./producer";
 import QueueManager from "./queueManager";
 import RedisRepository from "./redisRepository";
-import { Monitor } from ".";
+import { Monitor, Producer, Consumer } from ".";
 
 export default class Builder {
     /**
@@ -29,9 +27,9 @@ export default class Builder {
         return new QueueManager(queueName, redisClient, new RedisRepository(redisClient), config);
     }
 
-    static createMonitor(queueName: string, config?: IAppConfiguration): Monitor {
+    static createMonitor(config?: IAppConfiguration): Monitor {
         const redisClient = new Redis(config);
-        return new Monitor(queueName, new RedisRepository(redisClient), redisClient, new Redis(config));
+        return new Monitor(new RedisRepository(redisClient), redisClient, new Redis(config));
     }
 
     private static setDefaultAppValues(config?: IAppConfiguration) {

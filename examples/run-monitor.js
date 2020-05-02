@@ -1,5 +1,5 @@
 const dmq = require("../dist");
 
 
-const monitor = new dmq.Monitor();
+const monitor = dmq.Builder.createMonitor();
 monitor.start();
