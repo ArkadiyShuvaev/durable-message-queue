@@ -40,6 +40,12 @@ export interface IAppConfiguration extends RedisOptions {
       * @param {number} maxReceiveCount - When the Message.receiveCount for a message exceeds maxReceiveCount the for a queue, the queue manager moves the message to a dead-letter queue (default value is 3).
       */
      maxReceiveCount?: number
+
+     /**
+      * @param {number} monitorUpdateInterval - A period of time in seconds to update metrics of the queue monitor.
+     * The default value is 60 seconds (1 minute).
+      */
+     monitorUpdateInterval?: number
 }
 
 export interface Repository {

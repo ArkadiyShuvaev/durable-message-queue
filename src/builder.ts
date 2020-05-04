@@ -28,8 +28,9 @@ export default class Builder {
     }
 
     static createMonitor(config?: IAppConfiguration): Monitor {
+        this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
-        return new Monitor(new RedisRepository(redisClient), redisClient, new Redis(config));
+        return new Monitor(new RedisRepository(redisClient), redisClient, new Redis(config), config);
     }
 
     private static setDefaultAppValues(config?: IAppConfiguration) {
@@ -48,6 +49,10 @@ export default class Builder {
 
         if (typeof config.maxReceiveCount === "undefined") {
             config.maxReceiveCount = 3;
+        }
+
+        if (typeof config.monitorUpdateInterval === "undefined") {
+            config.monitorUpdateInterval = 60;
         }
 
         return config;
