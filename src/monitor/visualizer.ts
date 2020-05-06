@@ -7,15 +7,18 @@ export default class Visualizer {
     size: number;
     cursor: number;
     previousRowCount: number;
+    isFirstStart: number;
         constructor (size: number = 50) {
             this.size = size;
             this.cursor = 0
             this.previousRowCount = 0;
+            this.isFirstStart = 0;
         }
 
     render(rows: ReadonlyArray<Row>): void {
-        if (rows.length < this.previousRowCount) {
+        if (rows.length < this.previousRowCount || this.isFirstStart === 0) {
             console.clear();
+            this.isFirstStart++;
         }
         this.previousRowCount = rows.length;
         this.cursor = 0
@@ -41,6 +44,7 @@ export default class Visualizer {
 
         //process.stdout.clearLine(0); // Direction = -1 | 0 | 1;
         readline.cursorTo(process.stdout, this.cursor, 0);
+        process.stdout.clearLine(0);
         this.timer = setInterval(() => {
             process.stdout.write("\u2588")
             this.cursor++;
