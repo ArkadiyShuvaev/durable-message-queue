@@ -30,7 +30,7 @@ export default class Builder {
     static createMonitor(config?: IAppConfiguration): Monitor {
         config = this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
-        return new Monitor(new RedisRepository(redisClient), redisClient, new Redis(config), config);
+        return new Monitor(new RedisRepository(redisClient), new Redis(config), config);
     }
 
     private static setDefaultAppValues(config?: IAppConfiguration) {

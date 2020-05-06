@@ -9,16 +9,17 @@ export default class Monitor extends BaseService {
     private repo: Repository;
     private config: IAppConfiguration;
     private monitorUpdateInterval: number;
-    private timer: NodeJS.Timeout | undefined;
+    //private timer: NodeJS.Timeout | undefined;
     queues: string[];
     visualizer: Visualizer;
 
     // private redis: Redis;
-    // private redisSubscribedClient: Redis;
-    constructor(redisRepository: Repository, redisClient: Redis, redisSubscribedClient: Redis, config?: IAppConfiguration) {
+    private redisSubscribedClient: Redis;
+    constructor(redisRepository: Repository, redisSubscribedClient: Redis, config?: IAppConfiguration) {
         super("dummy");
 
         this.repo = redisRepository;
+        this.redisSubscribedClient = redisSubscribedClient;
 
         if (typeof config === "undefined"
             || typeof config.monitorUpdateInterval === "undefined") {
@@ -27,7 +28,7 @@ export default class Monitor extends BaseService {
 
         this.queues = [];
         this.config = config;
-        this.timer = undefined;
+        //this.timer = undefined;
         this.visualizer = new Visualizer();
         this.monitorUpdateInterval = config.monitorUpdateInterval;
     }
