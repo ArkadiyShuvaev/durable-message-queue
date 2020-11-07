@@ -5,6 +5,7 @@ export default class BaseService {
     protected publishedQueue: string;
     protected processingQueue: string;
     protected notificationQueue: string;
+    protected updateQueueChannel: string;
     protected metricsQueue: string;
     protected deadQueue: string;
     protected allQueues: string;
@@ -19,6 +20,7 @@ export default class BaseService {
         this.metricsQueue = `dmq:${queueName}:metrics`;
         this.deadQueue = `dmq:${queueName}:deadMessage`;
         this.allQueues = `dmq:allQueues`;
+        this.updateQueueChannel = `dmq:updateQueueChannel`
     }
 
     /**

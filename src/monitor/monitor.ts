@@ -38,12 +38,13 @@ export default class Monitor extends BaseService {
         await this.getQueues();
         await this.renderQueues();
 
-        //const getQueueInterval =
-        setInterval(async () => await this.getQueues(),
-            this.monitorUpdateInterval * 10 * 1000);
-
-        //const monitorUpdateInterval =
         setInterval(async () => this.renderQueues(), this.monitorUpdateInterval * 1000);
+        setInterval(async () => await this.getQueues(), this.monitorUpdateInterval * 10 * 1000);
+
+        await this.redisSubscribedClient.subscribe(this.updateQueueChannel);
+        this.redisSubscribedClient.on("message", async () => {
+            await this.getQueues();
+        });
     }
     async renderQueues(): Promise<void> {
         const map = new Map<string, Metrics>();
