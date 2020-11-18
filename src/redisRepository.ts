@@ -1,10 +1,9 @@
 import { Redis } from "ioredis";
-import {Repository, Message, Statistics, MessageMetadata} from "./types";
+import {Repository, Message, Metrics, MessageMetadata} from "./types";
 import { nameof } from "./utils";
 import LuaScripts from "./luaScripts";
 
 export default class RedisRepository implements Repository {
-
     private redis: Redis;
 
     constructor(redis: Redis) {
@@ -21,7 +20,7 @@ export default class RedisRepository implements Repository {
                 const now = new Date().toISOString();
                 const array = await this.redis.eval(luaScript, 4,
                     moveFrom, moveTo, messageResourceNamePrefix, metricsQueue,
-                    nameof<Statistics>("numberOfMessagesReceived"),
+                    nameof<Metrics>("numberOfMessagesReceived"),
                     nameof<Message>("receiveCount"), nameof<Message>("receivedDt"),
                     nameof<Message>("updatedDt"), now, now);
 
@@ -81,7 +80,7 @@ export default class RedisRepository implements Repository {
                 const luaScript = await LuaScripts.getMoveMessageToPublishedQueue();
                 const result:boolean = await this.redis.eval(luaScript, 4,
                     messageFullName, moveFrom, moveTo, metricsQueue,
-                    nameof<Statistics>("numberOfMessagesReturned"), nameof<Message>("receivedDt"),
+                    nameof<Metrics>("numberOfMessagesReturned"), nameof<Message>("receivedDt"),
                     nameof<Message>("updatedDt"), updatedDt, messageId);
 
                 return res(result);
@@ -99,7 +98,7 @@ export default class RedisRepository implements Repository {
                 const luaScript = await LuaScripts.getMoveMessageToDeadQueue();
                 const result:boolean = await this.redis.eval(luaScript, 4,
                     messageKey, deadMessageKey, processingQueue, metricsQueue,
-                    nameof<Statistics>("numberOfMessagesDead"), nameof<Message>("updatedDt"),
+                    nameof<Metrics>("numberOfMessagesDead"), nameof<Message>("updatedDt"),
                     updatedDt, messageId);
 
                 return res(result);
@@ -123,7 +122,21 @@ export default class RedisRepository implements Repository {
             .hset(messageFullName, nameof<Message>("updatedDt"), message.updatedDt)
             .hset(messageFullName, nameof<Message>("receiveCount"), message.receiveCount)
             .lpush(addTo, message.id)
-            .hincrby(metricsQueue, nameof<Statistics>("numberOfMessagesSent"), 1)
+            .hincrby(metricsQueue, nameof<Metrics>("numberOfMessagesSent"), 1)
             .exec();
+    }
+
+    async getQueues(): Promise<Array<string>> {
+        return new Promise(async (res, rej) => {
+            const resultObj = await this.redis.scan(0, "MATCH", "dmq:*:metrics", "COUNT", 10000);
+            return res(resultObj[1]);
+        });
+    }
+
+    async getMetrics(key: string) : Promise<Metrics> {
+        return new Promise(async (res, rej) => {
+            const array = await this.redis.hgetall(key);
+            res((array as unknown) as Metrics);
+        });
     }
 }

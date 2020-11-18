@@ -12,12 +12,21 @@ export interface Message extends MessageMetadata {
     payload: string
 }
 
-export interface Statistics {
+export interface Metrics {
     numberOfMessagesSent: number,
     numberOfMessagesReceived: number,
     numberOfMessagesDeleted: number
     numberOfMessagesReturned: number
     numberOfMessagesDead: number
+}
+
+export interface Row {
+    cells: Array<Cell>
+}
+
+export interface Cell {
+    startIndex: number,
+    value: string
 }
 
 export interface IAppConfiguration extends RedisOptions {
@@ -31,6 +40,12 @@ export interface IAppConfiguration extends RedisOptions {
       * @param {number} maxReceiveCount - When the Message.receiveCount for a message exceeds maxReceiveCount the for a queue, the queue manager moves the message to a dead-letter queue (default value is 3).
       */
      maxReceiveCount?: number
+
+     /**
+      * @param {number} monitorUpdateInterval - A period of time in seconds to update metrics of the queue monitor.
+     * The default value is 60 seconds (1 minute).
+      */
+     monitorUpdateInterval?: number
 }
 
 export interface Repository {
@@ -92,4 +107,19 @@ export interface Repository {
      * @param {string} messageFullName - The message full name (e.g. createUser:message:2).
      */
     getMessageMetadata(messageFullName: string): Promise<MessageMetadata>
+
+    /**
+     * Returns a collection of queue names.
+     */
+    getQueues() : Promise<Array<string>>
+
+    /**
+     * Returns a collection of queue names.
+     */
+    getQueues() : Promise<Array<string>>
+
+    /**
+     * Returns a collection of metrics for a given reference.
+     */
+    getMetrics(queueName: string) : Promise<Metrics>
 }

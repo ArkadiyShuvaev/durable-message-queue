@@ -23,8 +23,8 @@ gulp.task("lua", () => {
       .pipe(gulp.dest(dist_lua_folder));
   });
 
-gulp.task("build", gulp.series("clear", "lua", "ts"));
+gulp.task("build", gulp.series("clear", "ts", "lua"));
 
-gulp.task("dev", gulp.series("lua", "ts"));
+gulp.task("dev", gulp.series("ts", "lua"));
 
 gulp.task("default", gulp.series("build"));

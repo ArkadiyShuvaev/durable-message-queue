@@ -1,9 +1,8 @@
-import Consumer from "./consumer"
 import Redis from "ioredis";
 import { IAppConfiguration } from "./types";
-import Producer from "./producer";
 import QueueManager from "./queueManager";
 import RedisRepository from "./redisRepository";
+import { Monitor, Producer, Consumer } from ".";
 
 export default class Builder {
     /**
@@ -28,6 +27,12 @@ export default class Builder {
         return new QueueManager(queueName, redisClient, new RedisRepository(redisClient), config);
     }
 
+    static createMonitor(config?: IAppConfiguration): Monitor {
+        config = this.setDefaultAppValues(config);
+        const redisClient = new Redis(config);
+        return new Monitor(new RedisRepository(redisClient), new Redis(config), config);
+    }
+
     private static setDefaultAppValues(config?: IAppConfiguration) {
         if (typeof config === "undefined") {
             config = {};
@@ -44,6 +49,10 @@ export default class Builder {
 
         if (typeof config.maxReceiveCount === "undefined") {
             config.maxReceiveCount = 3;
+        }
+
+        if (typeof config.monitorUpdateInterval === "undefined") {
+            config.monitorUpdateInterval = 60;
         }
 
         return config;
