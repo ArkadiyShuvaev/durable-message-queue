@@ -1,6 +1,7 @@
 import BaseService from "./baseService";
 import { Redis } from "ioredis";
 import { IAppConfiguration, Repository, MessageMetadata } from "./types";
+import ActionResult from "./actionResult";
 
 export default class QueueManager extends BaseService {
 
@@ -25,9 +26,9 @@ export default class QueueManager extends BaseService {
         this.maxReceiveCount = config.maxReceiveCount;
     }
 
-    start(): void {
+    start(): NodeJS.Timeout {
         const timeOut = setInterval(async () => {
-            return new Promise<string>(async (res, rej) => {
+            return new Promise<void>(async (res, rej) => {
                 try {
                     console.debug(`Processing the "${this.queueName}" queue...`);
 
@@ -36,6 +37,10 @@ export default class QueueManager extends BaseService {
                     messageIds.forEach(async messageIdAsStr => {
                         const messageKey = this.getMessageKey(parseInt(messageIdAsStr));
                         const messageMetadata = await this.repo.getMessageMetadata(messageKey);
+
+                        if (!messageMetadata) {
+                            throw new Error(`Message metadata cannot be found by the '${messageKey}' message key`);
+                        }
                         const dateTimeAsStr = messageMetadata.receivedDt;
 
                         if (typeof dateTimeAsStr === "string") {
@@ -59,6 +64,8 @@ export default class QueueManager extends BaseService {
 
             });
         }, this.processingTimeoutSeconds * 900); // at 10% less than the processingTimeout value
+
+        return timeOut;
     }
 
     private async moveToPublishedQueue(messageKey: string, messageMetadata: MessageMetadata) {

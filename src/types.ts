@@ -100,13 +100,13 @@ export interface Repository {
      * all message keys ('payload' key, 'createdDt' key, 'receivedDt' key, etc) without a message id.
      * E.g. 'createUser:message:'
      */
-    getMessage(moveFrom: string, moveTo:string, metricsQueue: string, messageQueuePrefix:string): Promise<Message>
+    getMessage(moveFrom: string, moveTo:string, metricsQueue: string, messageQueuePrefix:string): Promise<Message | undefined>
 
     /**
      * Returns message metadata for a given reference.
      * @param {string} messageFullName - The message full name (e.g. createUser:message:2).
      */
-    getMessageMetadata(messageFullName: string): Promise<MessageMetadata>
+    getMessageMetadata(messageFullName: string): Promise<MessageMetadata | undefined>
 
     /**
      * Returns a collection of queue names.

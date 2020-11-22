@@ -1,6 +1,6 @@
-import del from "del";
-import gulp from "gulp";
-import ts from "gulp-typescript";
+const del = require("del");
+const gulp = require("gulp");
+const ts  = require("gulp-typescript");
 
 
 const tsProject = ts.createProject("tsconfig.json");

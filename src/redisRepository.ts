@@ -10,11 +10,10 @@ export default class RedisRepository implements Repository {
         this.redis = redis;
     }
 
-    async getMessage(moveFrom: string, moveTo: string, metricsQueue: string, messageResourceNamePrefix: string): Promise<Message> {
+    async getMessage(moveFrom: string, moveTo: string, metricsQueue: string,
+                        messageResourceNamePrefix: string): Promise<Message | undefined> {
         return new Promise(async (res, rej) => {
             try {
-
-                let result: object | undefined = undefined;
 
                 const luaScript = await LuaScripts.getMessageFromPublishedQueue();
                 const now = new Date().toISOString();
@@ -25,16 +24,16 @@ export default class RedisRepository implements Repository {
                     nameof<Message>("updatedDt"), now, now);
 
                 if (array) {
-                    let result: any = {};
+                    let arrayResult: any = {};
                     for (let idx = 0; idx < array.length; idx = idx + 2) {
 
-                        result[array[idx]] = array[idx+1];
+                        arrayResult[array[idx]] = array[idx+1];
                     }
 
-                    res(<Message><unknown>result);
+                    res(<Message><unknown>arrayResult);
                 }
 
-                res(result);
+                res(undefined);
 
             } catch (err) {
                 rej(err);
@@ -42,11 +41,9 @@ export default class RedisRepository implements Repository {
         });
     }
 
-    async getMessageMetadata(messageFullName: string): Promise<MessageMetadata> {
+    async getMessageMetadata(messageFullName: string): Promise<MessageMetadata | undefined> {
         return new Promise(async (res, rej) => {
             try {
-
-                let result: object | undefined = undefined;
 
                 const array = await this.redis.hmget(messageFullName,
                         nameof<Message>("id"), nameof<Message>("createdDt"),
@@ -65,7 +62,7 @@ export default class RedisRepository implements Repository {
                     res(result);
                 }
 
-                res(result);
+                res(undefined);
 
             } catch (err) {
                 rej(err);
