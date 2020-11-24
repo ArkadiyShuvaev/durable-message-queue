@@ -8,12 +8,12 @@ export default class Visualizer {
     cursor: number;
     previousRowCount: number;
     isFirstStart: number;
-        constructor (size: number = 50) {
-            this.size = size;
-            this.cursor = 0
-            this.previousRowCount = 0;
-            this.isFirstStart = 0;
-        }
+    constructor (size: number = 50) {
+        this.size = size;
+        this.cursor = 0
+        this.previousRowCount = 0;
+        this.isFirstStart = 0;
+    }
 
     render(rows: ReadonlyArray<Row>): void {
         if (rows.length < this.previousRowCount || this.isFirstStart === 0) {
@@ -43,10 +43,37 @@ export default class Visualizer {
         // process.stdout.write("\n");
 
         //process.stdout.clearLine(0); // Direction = -1 | 0 | 1;
+
+        // set position on the "first" row and clear it
         readline.cursorTo(process.stdout, this.cursor, 0);
         process.stdout.clearLine(0);
+
+        let symbolIdx = 0;
         this.timer = setInterval(() => {
-            process.stdout.write("\u2588")
+            readline.cursorTo(process.stdout, 0, 0);
+            switch (symbolIdx) {
+                case 0:
+                case 4:
+                    process.stdout.write("|");
+                    break;
+                case 1:
+                case 5:
+                    process.stdout.write("/");
+                    break;
+                case 2:
+                case 6:
+                    process.stdout.write("-");
+                    break;
+                case 3:
+                case 7:
+                    process.stdout.write("\\");
+            }
+
+            if (symbolIdx >= 7) {
+                symbolIdx = 0;
+            } else {
+                symbolIdx++;
+            }
             this.cursor++;
             if (this.cursor >= this.size) {
                 clearTimeout(this.timer as NodeJS.Timeout);
