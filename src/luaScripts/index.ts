@@ -13,7 +13,7 @@ export default class LuaScripts {
 
                 if (!this.getMessageFromPublishedQueueScript) {
 
-                    const filePath = join(process.cwd(), "luaScripts", "getMessageFromPublishedQueue.lua");
+                    const filePath = join(__dirname, "getMessageFromPublishedQueue.lua");
                     const data = await fs.readFile(filePath); //  10.0.0 + is required
                     this.getMessageFromPublishedQueueScript = Buffer.from(data).toString("utf8");
                 }
@@ -30,7 +30,7 @@ export default class LuaScripts {
             try {
                 if (!this.moveMessageToPublishedQueueScript) {
 
-                    const filePath = join(process.cwd(), "luaScripts", "moveMessageToPublishedQueue.lua");
+                    const filePath = join(__dirname, "moveMessageToPublishedQueue.lua");
                     const data = await fs.readFile(filePath); //  10.0.0 + is required
                     this.moveMessageToPublishedQueueScript = Buffer.from(data).toString("utf8");
                 }
@@ -47,7 +47,7 @@ export default class LuaScripts {
             try {
                 if (!this.moveMessageToDeadQueueScript) {
 
-                    const filePath = join(process.cwd(), "luaScripts", "moveMessageToDeadQueue.lua");
+                    const filePath = join(__dirname, "moveMessageToDeadQueue.lua");
                     const data = await fs.readFile(filePath); //  10.0.0 + is required
                     this.moveMessageToDeadQueueScript = Buffer.from(data).toString("utf8");
                 }
