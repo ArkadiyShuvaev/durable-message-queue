@@ -1,25 +1,17 @@
-import { Redis } from "ioredis";
-import BaseService from "../baseService";
 import { IAppConfiguration, Metrics, Repository } from "../types";
 import RowsCreator from "./rowsCreator";
 import Visualizer from "./visualizer";
 
-export default class Monitor extends BaseService {
+export default class Monitor {
 
     private repo: Repository;
-    private config: IAppConfiguration;
     private monitorUpdateInterval: number;
-    //private timer: NodeJS.Timeout | undefined;
     queues: string[];
     visualizer: Visualizer;
 
-    // private redis: Redis;
-    private redisSubscribedClient: Redis;
-    constructor(redisRepository: Repository, redisSubscribedClient: Redis, config?: IAppConfiguration) {
-        super("dummy");
+    constructor(redisRepository: Repository, config?: IAppConfiguration) {
 
         this.repo = redisRepository;
-        this.redisSubscribedClient = redisSubscribedClient;
 
         if (typeof config === "undefined"
             || typeof config.monitorUpdateInterval === "undefined") {
@@ -27,8 +19,6 @@ export default class Monitor extends BaseService {
         }
 
         this.queues = [];
-        this.config = config;
-        //this.timer = undefined;
         this.visualizer = new Visualizer();
         this.monitorUpdateInterval = config.monitorUpdateInterval;
     }
@@ -41,10 +31,10 @@ export default class Monitor extends BaseService {
         setInterval(async () => this.renderQueues(), this.monitorUpdateInterval * 1000);
         setInterval(async () => await this.getQueues(), this.monitorUpdateInterval * 10 * 1000);
 
-        await this.redisSubscribedClient.subscribe(this.updateQueueChannel);
-        this.redisSubscribedClient.on("message", async () => {
-            await this.getQueues();
-        });
+        // await this.redisSubscribedClient.subscribe(this.updateQueueChannel);
+        // this.redisSubscribedClient.on("newMessageAdded", async () => {
+        //     await this.getQueues();
+        // });
     }
     async renderQueues(): Promise<void> {
         const map = new Map<string, Metrics>();
