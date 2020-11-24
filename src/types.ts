@@ -113,10 +113,6 @@ export interface Repository {
      */
     getQueues() : Promise<Array<string>>
 
-    /**
-     * Returns a collection of queue names.
-     */
-    getQueues() : Promise<Array<string>>
 
     /**
      * Returns a collection of metrics for a given reference.
