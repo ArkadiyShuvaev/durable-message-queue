@@ -5,7 +5,7 @@ import Visualizer from "./visualizer";
 export default class Monitor {
 
     private repo: Repository;
-    private monitorUpdateInterval: number;
+    private monitorUpdateIntervalInSeconds: number;
     queues: string[];
     visualizer: Visualizer;
 
@@ -19,8 +19,8 @@ export default class Monitor {
         }
 
         this.queues = [];
-        this.visualizer = new Visualizer();
-        this.monitorUpdateInterval = config.monitorUpdateInterval;
+        this.visualizer = new Visualizer(config.monitorUpdateInterval);
+        this.monitorUpdateIntervalInSeconds = config.monitorUpdateInterval;
     }
 
     async start() {
@@ -28,8 +28,8 @@ export default class Monitor {
         await this.getQueues();
         await this.renderQueues();
 
-        setInterval(async () => this.renderQueues(), this.monitorUpdateInterval * 1000);
-        setInterval(async () => await this.getQueues(), this.monitorUpdateInterval * 10 * 1000);
+        setInterval(async () => this.renderQueues(), this.monitorUpdateIntervalInSeconds * 1000);
+        setInterval(async () => await this.getQueues(), this.monitorUpdateIntervalInSeconds * 10 * 1000);
 
         // await this.redisSubscribedClient.subscribe(this.updateQueueChannel);
         // this.redisSubscribedClient.on("newMessageAdded", async () => {
