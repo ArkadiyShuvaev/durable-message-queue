@@ -43,8 +43,8 @@ export default class Builder {
         //    config.showFriendlyErrorStack = true;
         //}
 
-        if (typeof config.processingTimeout === "undefined") {
-            config.processingTimeout = 300;
+        if (typeof config.visibilityTimeout === "undefined") {
+            config.visibilityTimeout = 300;
         }
 
         if (typeof config.maxReceiveCount === "undefined") {

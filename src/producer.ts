@@ -1,9 +1,7 @@
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
-import ActionResult from "./actionResult";
+import { ActionResult } from "./types";
 import { Message, Repository } from "./types";
-import { nameof } from "./utils";
-
 
 export default class Producer extends BaseService {
     private redis: Redis;
@@ -16,7 +14,7 @@ export default class Producer extends BaseService {
     }
 
     /**
-     * Sends the message to the queue and creates the consumer notification event.
+     * Sends a message to the queue and creates the consumer notification event to notify consumers.
      * @param {string} messageRequest - The serialized object.
      */
     public send(messageRequest: string): Promise<ActionResult> {

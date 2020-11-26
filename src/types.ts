@@ -34,7 +34,7 @@ export interface IAppConfiguration extends RedisOptions {
      * @param {number} visibilityTimeout - A period of time in seconds during which the library prevents other consumers from receiving and processing the message.
      * The default visibility timeout for a message is 300 seconds (5 minutes).
      */
-     processingTimeout?: number
+     visibilityTimeout?: number
 
      /**
       * @param {number} maxReceiveCount - When the Message.receiveCount for a message exceeds maxReceiveCount the for a queue, the queue manager moves the message to a dead-letter queue (default value is 3).
@@ -118,4 +118,9 @@ export interface Repository {
      * Returns a collection of metrics for a given reference.
      */
     getMetrics(queueName: string) : Promise<Metrics>
+}
+
+export interface ActionResult {
+    isSuccess: boolean,
+    message: string
 }

@@ -3,7 +3,7 @@ import Builder from "../dist/builder";
 const queueName = "createUser";
 
 const queueManager = Builder.createQueueManager(queueName, {
-    processingTimeout: 10,
+    visibilityTimeout: 10,
     maxReceiveCount: 2
 });
 queueManager.start();

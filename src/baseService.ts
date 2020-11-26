@@ -1,14 +1,26 @@
 export default class BaseService {
-    protected messageUniqId: string;
-    protected queueName: string;
-    private messageQueue: string;
-    protected publishedQueue: string;
-    protected processingQueue: string;
-    protected notificationQueue: string;
-    protected updateQueueChannel: string;
-    protected metricsQueue: string;
-    protected deadQueue: string;
-    protected allQueues: string;
+
+    /**
+     * Gets a redis key to get or set a message unique identifier.
+    */
+    protected readonly messageUniqId: string;
+    protected readonly queueName: string;
+    private readonly messageQueue: string;
+
+    /**
+     * Returns a redis key for list that stores published messages identifiers.
+     */
+    protected readonly publishedQueue: string;
+
+    /**
+     * Returns a redis list key that stores processed message identifiers.
+     */
+    protected readonly processingQueue: string;
+    protected readonly notificationQueue: string;
+    protected readonly updateQueueChannel: string;
+    protected readonly metricsQueue: string;
+    protected readonly deadQueue: string;
+    //protected readonly allQueues: string;
 
     constructor(queueName: string) {
         this.queueName = queueName;
@@ -19,12 +31,12 @@ export default class BaseService {
         this.notificationQueue = `dmq:${queueName}:notification`;
         this.metricsQueue = `dmq:${queueName}:metrics`;
         this.deadQueue = `dmq:${queueName}:deadMessage`;
-        this.allQueues = `dmq:allQueues`;
+        //this.allQueues = `dmq:allQueues`;
         this.updateQueueChannel = `dmq:updateQueueChannel`
     }
 
     /**
-     * Returns message key. E.g. "createUser:message:2".
+     * Returns a message key. E.g. "createUser:message:2".
      * @param {number} messageId - The messageId. E.g. 2.
      */
     protected getMessageKey(messageId: number): string {
@@ -32,7 +44,7 @@ export default class BaseService {
     }
 
     /**
-     * Returns dead message key. E.g. "createUser:deadMessage:2".
+     * Returns a dead message key. E.g. "createUser:deadMessage:2".
      * @param {number} messageId - The messageId. E.g. 2.
      */
     protected getDeadMessageKey(messageId: number): string {
@@ -40,7 +52,7 @@ export default class BaseService {
     }
 
     /**
-     * Returns prefix message key. E.g. "createUser:message:".
+     * Returns a message key prefix. E.g. "createUser:message:".
      * @param {number} messageId - The messageId. E.g. 2.
      */
     protected getMessageResourceNamePrefix(): string {

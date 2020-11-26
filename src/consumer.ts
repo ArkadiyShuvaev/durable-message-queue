@@ -29,7 +29,7 @@ export default class Consumer extends BaseService {
     }
 
     /**
-     * Starts consuming published messages.
+     * Subscribes to consume published messages.
      * @param {fArgVoidAsync} callback - The function that receives a serialized message.
      * Should return void to identify a message as successfully processed.
      * Should throw error to notify the queue manager to re-handle the message.

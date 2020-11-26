@@ -1,13 +1,12 @@
 import BaseService from "./baseService";
 import { Redis } from "ioredis";
 import { IAppConfiguration, Repository, MessageMetadata } from "./types";
-import ActionResult from "./actionResult";
 
 export default class QueueManager extends BaseService {
 
     private redis: Redis;
     private repo: Repository;
-    private processingTimeoutSeconds: number;
+    private visibilityTimeout: number;
     private maxReceiveCount: number;
 
     constructor(queueName: string, redis: Redis, repo: Repository, config?: IAppConfiguration) {
@@ -16,13 +15,13 @@ export default class QueueManager extends BaseService {
         this.redis = redis;
 
         if (typeof config === "undefined"
-            || typeof config.processingTimeout === "undefined"
+            || typeof config.visibilityTimeout === "undefined"
             || typeof config.maxReceiveCount === "undefined") {
             throw new Error("Configuration");
         }
 
         this.repo = repo;
-        this.processingTimeoutSeconds = config.processingTimeout;
+        this.visibilityTimeout = config.visibilityTimeout;
         this.maxReceiveCount = config.maxReceiveCount;
     }
 
@@ -47,11 +46,11 @@ export default class QueueManager extends BaseService {
                             const unixEpochMilliseconds = new Date(dateTimeAsStr).getTime();
                             const subtractResult = new Date().getTime() - unixEpochMilliseconds;
 
-                            if (subtractResult > this.processingTimeoutSeconds  * 1000) {
+                            if (subtractResult > this.visibilityTimeout  * 1000) {
                                 if (messageMetadata.receiveCount === 0 || messageMetadata.receiveCount < this.maxReceiveCount) {
                                     await this.moveToPublishedQueue(messageKey, messageMetadata);
                                 } else {
-                                    await this.MoveToDeadQueue(messageKey, messageMetadata);
+                                    await this.moveToDeadQueue(messageKey, messageMetadata);
                                 }
                             }
                         }
@@ -63,7 +62,7 @@ export default class QueueManager extends BaseService {
                 }
 
             });
-        }, this.processingTimeoutSeconds * 900); // at 10% less than the processingTimeout value
+        }, this.visibilityTimeout * 900); // at 10% less then the visibilityTimeout
 
         return timeOut;
     }
@@ -81,7 +80,7 @@ export default class QueueManager extends BaseService {
         }
     }
 
-    private async MoveToDeadQueue(messageKey: string, messageMetadata: MessageMetadata) {
+    private async moveToDeadQueue(messageKey: string, messageMetadata: MessageMetadata) {
         console.debug(`Moving the "${messageKey}' message to the "${this.deadQueue}" dead queue...`);
         const result = await this.repo.moveToDeadQueue(messageKey, this.getDeadMessageKey(messageMetadata.id), this.processingQueue, this.metricsQueue, new Date().toISOString(), messageMetadata.id);
         if (result) {
