@@ -1,29 +1,47 @@
+- [Durable message queue](#durable-message-queue)
+  - [Features](#features)
+  - [Quick start](#quick-start)
+  - [Components](#components)
+    - [Producer](#producer)
+    - [Consumer](#consumer)
+      - [The processing timeout](#the-processing-timeout)
+      - [The maximum receive count](#the-maximum-receive-count)
+    - [Queue manager](#queue-manager)
+  - [Metrics](#metrics)
+
+
 # Durable message queue
 [![Build Status](https://travis-ci.org/ArkadiyShuvaev/durable-message-queue.svg?branch=master)](https://travis-ci.org/ArkadiyShuvaev/durable-message-queue)
 
 The draft of the doc.
 
-The library helps you build a distributed application with decoupled components using a FIFO queue. It implements the [Redis Reliable queue](https://redis.io/commands/rpoplpush) pattern and supports moving unprocessed or corrupted messages to a dead-letter queue.
+The library helps you build a distributed application with decoupled components using a FIFO queue.
+
+It implements the [Redis Reliable queue](https://redis.io/commands/rpoplpush) pattern and supports moving unprocessed or corrupted messages to a dead-letter queue.
+
+All important operations are produced with LUA scripts that [guarantees](https://redis.io/commands/eval#atomicity-of-scripts) that they are executed in an atomic way
 
 ## Features
 The library supports following features (described below in details):
-1. Thanks to Redis the library provides FIFO queue for published messages
+1. A FIFO queue for published messages
 1. Monitoring metrics that allow you to integrate the library with a monitoring system
 1. A processing timeout that determines the length of time for which a consumer can process the message
 1. A maximum receive count that specifies the number of times a message is delivered to the source queue before being moved to the dead-letter queue.
-1. All important operations are produced with LUA scripts that [guarantees](https://redis.io/commands/eval#atomicity-of-scripts) that they are executed in an atomic way
 
-## Installing
 
 ## Quick start
-1. Create a JavaScript file "quick-start.js":
+1. Create a new "quick-start.js" (or copy the example from the [quick-start.js](examples/quick-start.js) file):
     ```
     const dmq = require("durable-message-queue");
 
-    const queueName = "send-registration-email";
+    const queueName = "send-registration-confirmation-email";
+    const config = {
+        host: "127.0.0.1",
+        port: "6379"
+    };
 
-    const producer = dmq.Builder.createProducer(queueName);
-    const consumer = dmq.Builder.createConsumer(queueName);
+    const producer = dmq.Builder.createProducer(queueName, config);
+    const consumer = dmq.Builder.createConsumer(queueName, config);
 
     consumer.subscribe(async (message) => console.log(message));
 
@@ -52,18 +70,36 @@ The library supports following features (described below in details):
     >     receivedDt: '2020-11-26T21:46:01.870Z'  
     >  }
 
-## How it works
-### The processing timeout
-When a message is added to the queue by a producer it gets available for processing by consumers. One of them starts processing the message and the message is become unavailable for other consumers:
+## Components
+### Producer
+One or more producers can send messages to a FIFO queue. Messages are stored in the order that they were successfully received by Redis.
+
+Before adding to the queue metadata is added to each message. This metadata is used by the [queue manager](#queue-manager) to conduct the message state:
+- a message can be available to process by consumers
+- the message can be invisible for other consumers because it is processed
+- the message is moved to the dead queue because a  [maximum receive count](#the-maximum-receive-count) is exceeded
+### Consumer
+One or more consumers can subscribe to the queue's updates and they are immediately informed about adding a new message through an internal communication channel but only one of them receives the message to process.
+
+If a consumer is started after messages were added to the queue, the consumer validates the queue and starts processing messages.
+
+The consumer has access to a message metadata or uses a value of the "payload" property only (see the [quick start](#quick-start) above).
+
+#### The processing timeout
+When a message is added to the queue the consumer starts processing the message and the message is become unavailable for other consumers:
 
 ![Processing Timeout](https://raw.githubusercontent.com/ArkadiyShuvaev/durable-message-queue/master/assests/processing-timeout.png)
 
-If something goes wrong and the message cannot be processed by the consumer due for any reason, a queue manager makes the message visible for processing by another consumer. By default the processing timeout equals 300 seconds.
-### The maximum receive count
+If something goes wrong and the message cannot be processed by the consumer due for any reason, a [queue manager](#queue-manager) makes the message visible for processing by another consumer. By default the processing timeout equals 300 seconds.
+#### The maximum receive count
 If a message cannot be processed x times by a consumer, the message is moved to the dead-letter queue by a queue manager. This period of time is called the maximum receive count and equals 3 by default.
 
 ![Dead-letter queue](https://raw.githubusercontent.com/ArkadiyShuvaev/durable-message-queue/master/assests/dead-letter-queue.png)
-### Metrics
+
+### Queue manager
+The description is under construction.
+
+## Metrics
 The library supports a set of monitoring metrics that indicates the number of:
 1. "numberOfMessagesSent" - messages are sent by producers for processing
 2. "numberOfMessagesReceived" - messages are received and started processing by consumers

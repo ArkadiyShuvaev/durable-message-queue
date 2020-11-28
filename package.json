@@ -1,6 +1,6 @@
 {
   "name": "durable-message-queue",
-  "version": "0.1.3",
+  "version": "0.5",
   "description": "A durable message queue library powered by the Redis' reliable queue pattern and LUA scripts",
   "main": "dist/index.js",
   "files": [
