@@ -9,6 +9,8 @@
   - [Queue manager](#queue-manager)
   - [Monitor](#monitor)
 - [Settings](#settings)
+  - [Library related settings](#library-related-settings)
+  - [Ioredis related settings](#ioredis-related-settings)
 - [Metrics](#metrics)
 
 
@@ -26,9 +28,9 @@ All important operations are produced with LUA scripts that [guarantee](https://
 # Features
 The library supports the following features (described below in details):
 1. A FIFO queue for published messages
-1. Monitoring metrics that allow you to integrate the library with a monitoring system
-1. A processing timeout that determines the length of time for which a consumer can process the message
-1. A maximum receive count that specifies the number of times a message is delivered to the source queue before being moved to the dead-letter queue.
+1. Monitoring metrics that allow you to integrate the library with your monitoring system
+1. A processing timeout that determines the length of time for which a message is invisible for other consumer when the message begins to be processed
+1. A maximum number of processing attempts before a message is moved to the dead-letter queue
 
 
 # Quick start
@@ -63,14 +65,16 @@ The library supports the following features (described below in details):
     node quick-start.js
     ```
 1. See the output:
-    > {  
-    >     id: '2',  
-    >     receiveCount: '1',  
-    >     updatedDt: '2020-11-26T21:46:01.870Z',  
-    >     createdDt: '2020-11-26T21:46:01.827Z',  
-    >     payload: '{"userId":"1",  "messageType":"registrationConfirmation","to":"user@company.com"}',  
-    >     receivedDt: '2020-11-26T21:46:01.870Z'  
-    >  }
+    ```
+    {  
+        id: '2',  
+        receiveCount: '1',  
+        updatedDt: '2020-11-26T21:46:01.870Z',  
+        createdDt: '2020-11-26T21:46:01.827Z',  
+        payload: '{"userId":"1","messageType":"registrationConfirmation","to":"user@company.com"}',  
+        receivedDt: '2020-11-26T21:46:01.870Z'  
+    }
+    ```
 
 # Components
 ## Producer
@@ -110,15 +114,28 @@ You can change the default value by modifying the maxReceiveCount property. See 
 The description is under construction.
 
 ## Monitor
-The monitor is an additional component that allows us to keep up to date on metrics across all queues.
+The monitor tool is an additional component that allows us to keep up to date on metrics across all queues.
 
 ![Dead-letter queue](https://raw.githubusercontent.com/ArkadiyShuvaev/durable-message-queue/master/assests/monitor-animation.gif)
 
  Please use the [start-monitor.js](examples/start-monitor.js) file as an example to start the monitor tool and see the [Settings](#settings) section to get more details about configuration.
 
 # Settings
-The section is under construction.
+## Library related settings
+There are three settings that you can use with this library:
+1.  VisibilityTimeout - the period of time in seconds during which the library prevents other consumers from receiving and processing the message. The default visibility timeout for a message is 300 seconds (5 minutes).
+1. MaxReceiveCount - the maximum number of receives that are allowed before the message is moved to the dead-letter queue. If something goes wrong and the number of receives exceeds the MaxReceiveCount value, the queue manager moves the message to the dead-letter queue (see the picture of the [maximum receive count](#the-maximum-receive-count) section to get more details). The default value is 3.
+1. MonitorUpdateInterval - the period of time in seconds to update metrics of the queue monitor tool.
 
+## Ioredis related settings
+As far as the library uses [ioredis](https://github.com/luin/ioredis) to access to Redis, all ioredis-related configuration settings are transmitted to ioredis as is. Visit the ioredis main page to get more details about configuration of the connection.
+
+The simplest configuration includes only a host property with the server address:
+  ```
+  const config = {
+    host: "server name or ip address"
+  };
+  ```
 
 # Metrics
 The library supports a set of monitoring metrics that indicates the number of:
