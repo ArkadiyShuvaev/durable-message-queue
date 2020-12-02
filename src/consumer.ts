@@ -16,9 +16,9 @@ export default class Consumer extends BaseService {
      * Creates an instance of the consumer.
      * Once the client enters the subscribed state it is not supposed to issue any other commands,
      * and the second Redis client is required.
-     * @param {Redis} redisClient - The Redis client to handle messages.
-     * @param {RedisRepository} redisRepository - The Redis repository.
-     * @param {Redis} redisSubscribedClient - The Redis client to subscribe to new published messages.
+     * @param {Redis} redisClient - An instance of the Redis client to handle messages.
+     * @param {RedisRepository} redisRepository - An instance of the Redis repository.
+     * @param {Redis} redisSubscribedClient - An instance of the Redis client to subscribe to new published messages.
     */
     constructor(queueName: string, redisRepository: RedisRepository, redisClient: Redis, redisSubscribedClient: Redis) {
         super(queueName);

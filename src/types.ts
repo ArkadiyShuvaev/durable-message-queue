@@ -31,18 +31,21 @@ export interface Cell {
 
 export interface IAppConfiguration extends RedisOptions {
     /**
-     * @param {number} visibilityTimeout - A period of time in seconds during which the library prevents other consumers from receiving and processing the message.
-     * The default visibility timeout for a message is 300 seconds (5 minutes).
+     * @param {number} visibilityTimeout - Gets or sets a period of time in seconds during which the library prevents
+     * other consumers from receiving and processing the message.  The default visibility timeout
+     * for a message is 300 seconds (5 minutes).
      */
      visibilityTimeout?: number
 
      /**
-      * @param {number} maxReceiveCount - When the Message.receiveCount for a message exceeds maxReceiveCount the for a queue, the queue manager moves the message to a dead-letter queue (default value is 3).
+      * @param {number} maxReceiveCount - Gets or sets the maximum number of receives that are allowed before the message
+      * is moved to the dead-letter queue. If something goes wrong and the number of receives exceeds
+      * the this value, the queue manager moves the message to the dead-letter queue. The default value is 3.
       */
      maxReceiveCount?: number
 
      /**
-      * @param {number} monitorUpdateInterval - A period of time in seconds to update metrics of the queue monitor.
+      * @param {number} monitorUpdateInterval - Gets or sets a period of time in seconds to update metrics of the queue monitor.
      * The default value is 60 seconds (1 minute).
       */
      monitorUpdateInterval?: number

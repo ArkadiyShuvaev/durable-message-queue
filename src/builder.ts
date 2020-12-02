@@ -9,24 +9,42 @@ export default class Builder {
      * Creates an instance of the {@link Consumer}.
      * @param {string} queueName - A name of the queue.
      * @param {IAppConfiguration} config - A configuration of the library.
-     * @returns The consumer instance.
+     * @returns A new instance of the consumer.
      */
     static createConsumer(queueName: string, config?: IAppConfiguration): Consumer {
         const redisClient = new Redis(config);
         return new Consumer(queueName, new RedisRepository(redisClient), redisClient, new Redis(config));
     }
 
+    /**
+     * Creates an instance of the {@link Producer}.
+     * @param {string} queueName - A name of the queue.
+     * @param {IAppConfiguration} config - A configuration of the library.
+     * @returns A new instance of the producer.
+     */
     static createProducer(queueName: string, config?: IAppConfiguration): Producer {
         const redisClient = new Redis(config);
         return new Producer(queueName, new RedisRepository(redisClient), redisClient);
     }
 
+    /**
+     * Creates an instance of the {@link QueueManager}.
+     * @param {string} queueName - A name of the queue.
+     * @param {IAppConfiguration} config - A configuration of the library.
+     * @returns A new instance of the queue manager.
+     */
     static createQueueManager(queueName: string, config?: IAppConfiguration): QueueManager {
         config = this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
         return new QueueManager(queueName, redisClient, new RedisRepository(redisClient), config);
     }
 
+    /**
+     * Creates an instance of the {@link Monitor}.
+     * @param {string} queueName - A name of the queue.
+     * @param {IAppConfiguration} config - A configuration of the library.
+     * @returns A new instance of the monitor.
+     */
     static createMonitor(config?: IAppConfiguration): Monitor {
         config = this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
