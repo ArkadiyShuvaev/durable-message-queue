@@ -1,4 +1,4 @@
-import { IAppConfiguration, Metrics, Repository } from "../types";
+import { AppConfiguration, Metrics, Repository } from "../types";
 import RowsCreator from "./rowsCreator";
 import Visualizer from "./visualizer";
 
@@ -9,7 +9,7 @@ export default class Monitor {
     queues: string[];
     visualizer: Visualizer;
 
-    constructor(redisRepository: Repository, config?: IAppConfiguration) {
+    constructor(redisRepository: Repository, config?: AppConfiguration) {
 
         this.repo = redisRepository;
 

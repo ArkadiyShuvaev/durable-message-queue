@@ -29,7 +29,7 @@ export interface Cell {
     value: string
 }
 
-export interface IAppConfiguration extends RedisOptions {
+export interface AppConfiguration extends RedisOptions {
     /**
      * @param {number} visibilityTimeout - Gets or sets a period of time in seconds during which the library prevents
      * other consumers from receiving and processing the message.  The default visibility timeout

@@ -1,6 +1,6 @@
 import BaseService from "./baseService";
 import { Redis } from "ioredis";
-import { IAppConfiguration, Repository, MessageMetadata } from "./types";
+import { AppConfiguration, Repository, MessageMetadata } from "./types";
 
 export default class QueueManager extends BaseService {
 
@@ -9,7 +9,7 @@ export default class QueueManager extends BaseService {
     private visibilityTimeout: number;
     private maxReceiveCount: number;
 
-    constructor(queueName: string, redis: Redis, repo: Repository, config?: IAppConfiguration) {
+    constructor(queueName: string, redis: Redis, repo: Repository, config?: AppConfiguration) {
         super(queueName);
 
         this.redis = redis;

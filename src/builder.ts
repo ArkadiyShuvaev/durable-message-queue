@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { IAppConfiguration } from "./types";
+import { AppConfiguration } from "./types";
 import QueueManager from "./queueManager";
 import RedisRepository from "./redisRepository";
 import { Monitor, Producer, Consumer } from ".";
@@ -8,10 +8,10 @@ export default class Builder {
     /**
      * Creates an instance of the {@link Consumer}.
      * @param {string} queueName - A name of the queue.
-     * @param {IAppConfiguration} config - A configuration of the library.
+     * @param {AppConfiguration} config - A configuration of the library.
      * @returns A new instance of the consumer.
      */
-    static createConsumer(queueName: string, config?: IAppConfiguration): Consumer {
+    static createConsumer(queueName: string, config?: AppConfiguration): Consumer {
         const redisClient = new Redis(config);
         return new Consumer(queueName, new RedisRepository(redisClient), redisClient, new Redis(config));
     }
@@ -19,10 +19,10 @@ export default class Builder {
     /**
      * Creates an instance of the {@link Producer}.
      * @param {string} queueName - A name of the queue.
-     * @param {IAppConfiguration} config - A configuration of the library.
+     * @param {AppConfiguration} config - A configuration of the library.
      * @returns A new instance of the producer.
      */
-    static createProducer(queueName: string, config?: IAppConfiguration): Producer {
+    static createProducer(queueName: string, config?: AppConfiguration): Producer {
         const redisClient = new Redis(config);
         return new Producer(queueName, new RedisRepository(redisClient), redisClient);
     }
@@ -30,10 +30,10 @@ export default class Builder {
     /**
      * Creates an instance of the {@link QueueManager}.
      * @param {string} queueName - A name of the queue.
-     * @param {IAppConfiguration} config - A configuration of the library.
+     * @param {AppConfiguration} config - A configuration of the library.
      * @returns A new instance of the queue manager.
      */
-    static createQueueManager(queueName: string, config?: IAppConfiguration): QueueManager {
+    static createQueueManager(queueName: string, config?: AppConfiguration): QueueManager {
         config = this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
         return new QueueManager(queueName, redisClient, new RedisRepository(redisClient), config);
@@ -42,16 +42,16 @@ export default class Builder {
     /**
      * Creates an instance of the {@link Monitor}.
      * @param {string} queueName - A name of the queue.
-     * @param {IAppConfiguration} config - A configuration of the library.
+     * @param {AppConfiguration} config - A configuration of the library.
      * @returns A new instance of the monitor.
      */
-    static createMonitor(config?: IAppConfiguration): Monitor {
+    static createMonitor(config?: AppConfiguration): Monitor {
         config = this.setDefaultAppValues(config);
         const redisClient = new Redis(config);
         return new Monitor(new RedisRepository(redisClient), config);
     }
 
-    private static setDefaultAppValues(config?: IAppConfiguration) {
+    private static setDefaultAppValues(config?: AppConfiguration) {
         if (typeof config === "undefined") {
             config = {};
         }
