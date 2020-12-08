@@ -1,3 +1,4 @@
+import Debug from "debug";
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
 import { Message, Metrics } from "./types";
@@ -10,6 +11,8 @@ export default class Consumer extends BaseService {
 
     private redis: Redis;
     private repo: RedisRepository;
+    private error: Debug.Debugger;
+    private debug: Debug.Debugger;
     private redisSubscribedClient: Redis;
 
     /**
@@ -26,6 +29,10 @@ export default class Consumer extends BaseService {
         this.redis = redisClient;
         this.repo = redisRepository;
         this.redisSubscribedClient = redisSubscribedClient;
+
+        this.error = Debug(`${BaseService.appPrefix}:consumer:error`);
+        this.debug = Debug(`${BaseService.appPrefix}:consumer:debug`);
+        this.debug.log = console.log.bind(console);
     }
 
     /**
@@ -36,12 +43,12 @@ export default class Consumer extends BaseService {
      */
     async subscribe(callback: fArgVoidAsync) {
         await this.redisSubscribedClient.subscribe(this.notificationQueue);
-        console.debug(`The consumer has successfully subscribed to new messages in the ${this.publishedQueue} queue.`);
+        this.debug(`The consumer has successfully subscribed to new messages in the ${this.publishedQueue} queue.`);
         this.redisSubscribedClient.on("message", async () => {
             await this.processItemsInQueue(callback);
         });
 
-        console.debug(`Checking messages in the ${this.publishedQueue} queue...`);
+        this.debug(`Checking messages in the ${this.publishedQueue} queue...`);
         let message = await this.repo.getMessage(this.publishedQueue, this.processingQueue, this.metricsQueue, this.getMessageResourceNamePrefix());
         while (message) {
             await this.processJob(message, callback);
@@ -59,7 +66,8 @@ export default class Consumer extends BaseService {
     private async processJob(message: Message, callback: fArgVoidAsync) {
 
         try {
-            console.debug(`Start processing the ${message.id} message id.`);
+
+            this.debug(`Start processing the ${message.id} message id.`);
 
             await callback(message);
 
@@ -74,7 +82,7 @@ export default class Consumer extends BaseService {
 
 
         } catch (error) {
-            console.error(error);
+            this.error(error);
         }
     }
 }

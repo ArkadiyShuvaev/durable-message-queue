@@ -1,13 +1,18 @@
+import Debug from "debug";
 import { Redis } from "ioredis";
-import {Repository, Message, Metrics, MessageMetadata} from "./types";
+import { Repository, Message, Metrics, MessageMetadata } from "./types";
 import { nameof } from "./utils";
 import LuaScripts from "./luaScripts";
+import BaseService from "./baseService";
 
 export default class RedisRepository implements Repository {
     private redis: Redis;
+    private error: Debug.Debugger;
 
     constructor(redis: Redis) {
         this.redis = redis;
+
+        this.error = Debug(`${BaseService.appPrefix}:${this.constructor.name}:error`);
     }
 
     async getMessage(moveFrom: string, moveTo: string, metricsQueue: string,
@@ -36,6 +41,7 @@ export default class RedisRepository implements Repository {
                 res(undefined);
 
             } catch (err) {
+                this.error(err);
                 rej(err);
             }
         });
@@ -65,6 +71,7 @@ export default class RedisRepository implements Repository {
                 res(undefined);
 
             } catch (err) {
+                this.error(err);
                 rej(err);
             }
         });
@@ -83,6 +90,7 @@ export default class RedisRepository implements Repository {
                 return res(result);
 
             } catch (error) {
+                this.error(error);
                 rej(error)
             }
         });
@@ -101,6 +109,7 @@ export default class RedisRepository implements Repository {
                 return res(result);
 
             } catch (error) {
+                this.error(error);
                 rej(error)
             }
         });

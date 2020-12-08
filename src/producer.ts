@@ -1,3 +1,4 @@
+import Debug from "debug";
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
 import { ActionResult } from "./types";
@@ -6,11 +7,17 @@ import { Message, Repository } from "./types";
 export default class Producer extends BaseService {
     private redis: Redis;
     private repo: Repository;
+    private error: Debug.Debugger;
+    private debug: Debug.Debugger;
 
     constructor(queueName: string, repo:Repository, redis: Redis) {
         super(queueName);
         this.redis = redis;
         this.repo = repo;
+
+        this.error = Debug(`${BaseService.appPrefix}:producer:error`);
+        this.debug = Debug(`${BaseService.appPrefix}:producer:debug`);
+        this.debug.log = console.log.bind(console);
     }
 
     /**
@@ -35,7 +42,7 @@ export default class Producer extends BaseService {
 
                 await this.repo.addMessage(messageResourceName, this.publishedQueue, this.metricsQueue, message);
 
-                console.debug(`The producer sent a message ${messageId} to the ${this.publishedQueue} queue.`);
+                this.debug(`The producer sent a message ${messageId} to the ${this.publishedQueue} queue.`);
                 await this.repo.sendNotification(this.notificationQueue, messageId);
 
                 res({
@@ -44,6 +51,7 @@ export default class Producer extends BaseService {
                 });
 
             } catch (e) {
+                this.error(e);
                 rej({
                     isSuccess: false,
                     message: e

@@ -1,5 +1,6 @@
 export default class BaseService {
 
+    static readonly appPrefix = "dmq";
     /**
      * Gets a redis key to get or set a message unique identifier.
     */
@@ -8,7 +9,7 @@ export default class BaseService {
     private readonly messageQueue: string;
 
     /**
-     * Returns a redis key for list that stores published messages identifiers.
+     * Returns a redis key for the list that stores published messages identifiers.
      */
     protected readonly publishedQueue: string;
 
@@ -24,15 +25,15 @@ export default class BaseService {
 
     constructor(queueName: string) {
         this.queueName = queueName;
-        this.messageUniqId = `dmq:${queueName}:messageUniqId`;
-        this.messageQueue = `dmq:${queueName}:message`;
-        this.publishedQueue = `dmq:${queueName}:published`;
-        this.processingQueue = `dmq:${queueName}:processing`;
-        this.notificationQueue = `dmq:${queueName}:notification`;
-        this.metricsQueue = `dmq:${queueName}:metrics`;
-        this.deadQueue = `dmq:${queueName}:deadMessage`;
-        //this.allQueues = `dmq:allQueues`;
-        this.updateQueueChannel = `dmq:updateQueueChannel`
+        this.messageUniqId = `${BaseService.appPrefix}:${queueName}:messageUniqId`;
+        this.messageQueue = `${BaseService.appPrefix}:${queueName}:message`;
+        this.publishedQueue = `${BaseService.appPrefix}:${queueName}:published`;
+        this.processingQueue = `${BaseService.appPrefix}:${queueName}:processing`;
+        this.notificationQueue = `${BaseService.appPrefix}:${queueName}:notification`;
+        this.metricsQueue = `${BaseService.appPrefix}:${queueName}:metrics`;
+        this.deadQueue = `${BaseService.appPrefix}:${queueName}:deadMessage`;
+        //this.allQueues = `${this.appPrefix}:allQueues`;
+        this.updateQueueChannel = `${BaseService.appPrefix}:updateQueueChannel`
     }
 
     /**

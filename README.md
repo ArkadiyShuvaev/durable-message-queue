@@ -1,4 +1,13 @@
-- [Durable message queue](#durable-message-queue)
+# Durable message queue
+[![Build Status](https://travis-ci.org/ArkadiyShuvaev/durable-message-queue.svg?branch=master)](https://travis-ci.org/ArkadiyShuvaev/durable-message-queue)
+
+The library helps you build a distributed application with decoupled components using a FIFO queue.
+
+It implements the [Redis Reliable queue](https://redis.io/commands/rpoplpush) pattern and supports moving unprocessed or corrupted messages to a dead-letter queue.
+
+All important operations are produced with LUA scripts that [guarantee](https://redis.io/commands/eval#atomicity-of-scripts) that they are executed in an atomic way.
+
+## Table of contents
 - [Features](#features)
 - [Quick start](#quick-start)
 - [Components](#components)
@@ -12,20 +21,10 @@
   - [Library related settings](#library-related-settings)
   - [Ioredis related settings](#ioredis-related-settings)
 - [Metrics](#metrics)
+- [Debug](#debug)
 
 
-# Durable message queue
-[![Build Status](https://travis-ci.org/ArkadiyShuvaev/durable-message-queue.svg?branch=master)](https://travis-ci.org/ArkadiyShuvaev/durable-message-queue)
-
-The draft of the doc.
-
-The library helps you build a distributed application with decoupled components using a FIFO queue.
-
-It implements the [Redis Reliable queue](https://redis.io/commands/rpoplpush) pattern and supports moving unprocessed or corrupted messages to a dead-letter queue.
-
-All important operations are produced with LUA scripts that [guarantee](https://redis.io/commands/eval#atomicity-of-scripts) that they are executed in an atomic way.
-
-# Features
+## Features
 The library supports the following features (described below in details):
 1. A FIFO queue for published messages
 1. Monitoring metrics that allow you to integrate the library with your monitoring system
@@ -33,7 +32,7 @@ The library supports the following features (described below in details):
 1. A maximum number of processing attempts before a message is moved to the dead-letter queue
 
 
-# Quick start
+## Quick start
 1. Create a new "quick-start.js" (or copy the example from the [quick-start.js](examples/quick-start.js) file):
     ```
     const dmq = require("durable-message-queue");
@@ -76,8 +75,8 @@ The library supports the following features (described below in details):
     }
     ```
 
-# Components
-## Producer
+## Components
+### Producer
 One or more producers can send messages to a FIFO queue. Messages are stored in the order that they were successfully received by Redis.
 
 Before being added to the queue each message is updated by metadata. This metadata is used by the [queue manager](#queue-manager) to conduct the message state:
@@ -85,7 +84,7 @@ Before being added to the queue each message is updated by metadata. This metada
 - the message can be invisible for other consumers because it is processed
 - the message is moved to the dead queue because a [maximum receive count](#the-maximum-receive-count) is exceeded
 
-## Consumer
+### Consumer
 One or more consumers can subscribe to the queue's updates but only one of them receives the message to process. The message should be processed  during a limited period of time, otherwise, the message is marked as available and can be processed again by this or another consumer. See the [processing timeout](#the-processing-timeout) section to get more details.
 
 In case if a message cannot be processed X times, it is moved to the dead queue by the [queue manager](#queue-manager). See all details about this feature in the [maximum receive count](#the-maximum-receive-count) section below.
@@ -94,7 +93,7 @@ If the consumers are started after messages were added to the queue, they check 
 
 The consumer has access to message metadata and should filter all  outdated messages on its own using a value of the "createdDt" or "updatedDt" property (see the output of the [quick start](#quick-start) section above).
 
-### The processing timeout
+#### The processing timeout
 When a message is added to the queue the consumer starts processing the message and the message is become unavailable for other consumers:
 
 ![Processing Timeout](https://raw.githubusercontent.com/ArkadiyShuvaev/durable-message-queue/master/assests/processing-timeout.png)
@@ -103,31 +102,31 @@ If something goes wrong and the message cannot be processed by the consumer due 
 
 You can specify this period by assigning desired value in seconds to the visibilityTimeout value. See the [Settings](#settings) section to get more details.
 
-### The maximum receive count
+#### The maximum receive count
 If a message cannot be processed X times by a consumer, the message is moved to the dead-letter queue by a queue manager. This period of time is called the maximum receive count and equals 3 by default.
 
 ![Dead-letter queue](https://raw.githubusercontent.com/ArkadiyShuvaev/durable-message-queue/master/assests/dead-letter-queue.png)
 
 You can change the default value by modifying the maxReceiveCount property. See the [Settings](#settings) section to get more details.
 
-## Queue manager
+### Queue manager
 The description is under construction.
 
-## Monitor
+### Monitor
 The monitor tool is an additional component that allows us to keep up to date on metrics across all queues.
 
 ![Dead-letter queue](https://raw.githubusercontent.com/ArkadiyShuvaev/durable-message-queue/master/assests/monitor-animation.gif)
 
  Please use the [start-monitor.js](examples/start-monitor.js) file as an example to start the monitor tool and see the [Settings](#settings) section to get more details about configuration.
 
-# Settings
-## Library related settings
+## Settings
+### Library related settings
 There are three settings that you can use with this library:
-1.  VisibilityTimeout - the period of time in seconds during which the library prevents other consumers from receiving and processing the message. The default visibility timeout for a message is 300 seconds (5 minutes).
-1. MaxReceiveCount - the maximum number of receives that are allowed before the message is moved to the dead-letter queue. If something goes wrong and the number of receives exceeds the MaxReceiveCount value, the queue manager moves the message to the dead-letter queue (see the picture of the [maximum receive count](#the-maximum-receive-count) section to get more details). The default value is 3.
-1. MonitorUpdateInterval - the period of time in seconds to update metrics of the queue monitor tool.
+1. visibilityTimeout - the period of time in seconds during which the library prevents other consumers from receiving and processing the message. The default visibility timeout for a message is 300 seconds (5 minutes).
+1. maxReceiveCount - the maximum number of receives that are allowed before the message is moved to the dead-letter queue. If something goes wrong and the number of receives exceeds the MaxReceiveCount value, the queue manager moves the message to the dead-letter queue (see the picture of the [maximum receive count](#the-maximum-receive-count) section to get more details). The default value is 3.
+1. monitorUpdateInterval - the period of time in seconds to update metrics of the queue monitor tool.
 
-## Ioredis related settings
+### Ioredis related settings
 As far as the library uses [ioredis](https://github.com/luin/ioredis) to access to Redis, all ioredis-related configuration settings are transmitted to ioredis as is. Visit the ioredis main page to get more details about configuration of the connection.
 
 The simplest configuration includes only a host property with the server address:
@@ -137,10 +136,16 @@ The simplest configuration includes only a host property with the server address
   };
   ```
 
-# Metrics
+## Metrics
 The library supports a set of monitoring metrics that indicates the number of:
 1. "numberOfMessagesSent" - messages are sent by producers for processing
 1. "numberOfMessagesReceived" - messages are received and started processing by consumers
 1. "numberOfMessagesDead" - corrupted messages are moved to the dead-letter queue by a queue manager
 1. "numberOfMessagesReturned" - unprocessed messages are moved back to the queue because of crashing a consumer or for an undefined reason
 1. "numberOfMessagesDeleted" - messages are successfully processed and removed from the queue.
+
+## Debug
+You can set the DEBUG env to ioredis:* to print debug and error info. Here is the example for Windows and the [quick-start.js](examples/quick-start.js) file:
+```
+set DEBUG=dmq:* & node quick-start.js
+```

@@ -11,7 +11,10 @@
             "program": "${workspaceFolder}\\debugScripts\\basic_operations.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
-            ]
+            ],
+            "env": {
+                "DEBUG": "*"
+            }
         }, {
             "type": "node",
             "request": "launch",
