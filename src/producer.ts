@@ -1,7 +1,6 @@
 import Debug from "debug";
 import { Redis } from "ioredis";
 import BaseService from "./baseService";
-import { ActionResult } from "./types";
 import { Message, Repository } from "./types";
 
 export default class Producer extends BaseService {
@@ -24,10 +23,11 @@ export default class Producer extends BaseService {
      * Sends a message to the queue and creates the consumer notification event to notify consumers.
      * @param {string} messageRequest - The serialized object.
      */
-    public send(messageRequest: string): Promise<ActionResult> {
+    public send(messageRequest: string): Promise<void> {
 
-        return new Promise<ActionResult>(async (res, rej) => {
+        return new Promise<void>(async (res, rej) => {
             try {
+
                 const messageId = await this.redis.incr(this.messageUniqId);
                 const messageResourceName = this.getMessageKey(messageId);
 
@@ -44,18 +44,13 @@ export default class Producer extends BaseService {
 
                 this.debug(`The producer sent a message ${messageId} to the ${this.publishedQueue} queue.`);
                 await this.repo.sendNotification(this.notificationQueue, messageId);
+                this.debug(`The '${messageId}' message id has successfully been added into the queue to process.`);
 
-                res({
-                    isSuccess: true,
-                    message: `The '${messageId}' message id has successfully been added into the queue to process.`
-                });
+                res();
 
             } catch (e) {
                 this.error(e);
-                rej({
-                    isSuccess: false,
-                    message: e
-                });
+                rej(e);
             }
         });
     }

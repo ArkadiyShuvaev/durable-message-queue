@@ -122,8 +122,3 @@ export interface Repository {
      */
     getMetrics(queueName: string) : Promise<Metrics>
 }
-
-export interface ActionResult {
-    isSuccess: boolean,
-    message: string
-}
